@@ -1,0 +1,123 @@
+---
+title: "Colaboración INMEGEN"
+author: "Luigui Gallardo Becerra, Adrián Ochoa Leyva"
+date: "17.01.2022"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Libraries required
+library("colorRamps")
+library("ggplot2")
+library("reshape")
+library("scales")
+library("jcolors")
+library("grid")
+library("RColorBrewer")
+library("dplyr")
+library("ggpubr")
+library("phyloseq")
+library("microbiome")
+library("vegan")
+library("metagMisc")
+library("DiagrammeR")
+library("microbiomeMarker")
+library("DESeq2")
+library("apeglm")
+library("ggplot2")
+library("pheatmap")
+```
+## Pipeline
+```{r, echo = FALSE}
+mermaid("
+graph LR
+    a[Lecturas filtradas por calidad] --> b[MetaPhlAn, taxonomía]
+      b --> b1[Clasificación taxonómica]
+      b --> b2[Diversidad alfa]
+      b --> b3[Diversidad beta]
+      b --> b4[Especies expresadas diferencialmente]
+    
+    a --> c[HUMAnN3, funcionalidad]
+      c --> c1[Familias de genes]
+      c --> c2[Rutas metabólicas]
+      c --> c3[Cobertura de rutas metabólicas]
+      c --> c4[Expresión diferencial]
+
+
+classDef className1 fill:white,stroke:black
+class a className1
+
+classDef className2 fill:lightblue,stroke:black
+class b,b1,b2,b3,b4 className2
+
+classDef className3 fill:lightgreen,stroke:black
+class c,c1,c2,c3,c4 className3
+")
+```
+
+\newpage
+
+## HUMAnN3, funcionalidad
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+table <- read.table("./humann3_pathabundance_cpm_unstratified_r.tsv",
+                    sep = "\t",
+                    header = TRUE,
+                    row.names = 1,
+                    check.names = F)
+
+metadata <- read.csv("metadata_filt.txt",
+                     sep = "\t")
+
+# DESeq2
+deseq_data_set <- DESeqDataSetFromMatrix(countData = round(table),
+                                         colData = metadata,
+                                         design = ~Status_1)
+
+deseq_data_set$Status_1 <- relevel(deseq_data_set$Status_1,
+                                ref = "Control")
+
+# Differential expression analysis, alpha = 0.05 
+dif_expression_deseq_data_set <- DESeq(deseq_data_set)
+
+res_dif_expression_deseq_data_set <- results(dif_expression_deseq_data_set,
+                                             alpha = 0.05)
+
+summary_dif_expression_deseq_data_set <- summary(dif_expression_deseq_data_set)
+
+# Output table
+write.table(as.data.frame(res_dif_expression_deseq_data_set),
+            sep = '\t' ,
+            file="deseq2_allsamples_Status_1.tsv")
+
+# Volcano Plot
+plotMA(res_dif_expression_deseq_data_set,
+       ylim=c(-10,10))
+
+# Heatmap
+select <- order(rowMeans(counts(dif_expression_deseq_data_set,
+                                normalized=TRUE)),
+                decreasing=TRUE)[1:10000]
+
+df <- as.data.frame(colData(dif_expression_deseq_data_set)[,c("Sex","Status_1")])
+
+pheatmap(assay(dif_expression_deseq_data_set)[select,],
+    cluster_rows = TRUE,
+    show_rownames = FALSE,
+    cluster_cols = TRUE,
+    annotation_col=df)
+
+# PCA
+vsd <- vst(dif_expression_deseq_data_set,
+           blind=FALSE)
+
+plotPCA(vsd,
+        intgroup=c("group"))
+
+```

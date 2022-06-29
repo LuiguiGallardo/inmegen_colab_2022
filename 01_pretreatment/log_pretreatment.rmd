@@ -1,0 +1,186 @@
+---
+title: "Colaboración INMEGEN"
+author: "Luigui Gallardo Becerra, Adrián Ochoa Leyva"
+date: "17.01.2022"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Libraries required
+library("colorRamps")
+library("ggplot2")
+library("reshape")
+library("scales")
+library("jcolors")
+library("grid")
+library("RColorBrewer")
+library("dplyr")
+library("ggpubr")
+library("phyloseq")
+library("microbiome")
+library("vegan")
+library("metagMisc")
+library("DiagrammeR")
+library("microbiomeMarker")
+```
+
+## Pretratamiento
+
+```{r, echo = FALSE}
+mermaid("
+graph LR
+    a[Datos crudos] --> b[Trimmomatic, filtrado por calidad]
+    
+    b --> c[Ribopicker, remoción de ribosomales]
+    
+    c --> d[Knead2, remoción de hospedero]
+    
+
+classDef className1 fill:white,stroke:black
+class a className1
+
+classDef className2 fill:lightblue,stroke:black
+class b className2
+
+classDef className3 fill:lightgreen,stroke:black
+class c className3
+
+classDef className4 fill:orange,stroke:black
+class d className4
+
+")
+```
+1. Filtrado de calidad con *Trimmomatic* (remoción de adaptadores y calidad promedio de la lectura >Q20)
+2. Remoción de ribosomales con *ribopicker*
+3. Remoción de lecturas del hospedero con *knead2*
+
+| |Mínimo|Máximo|Promedio|
+|-|-|-|-|
+|Datos crudos|5 975 828|60 731 285|42 642 038|
+|Después del filtrado de calidad|4 831 088|60 731 285|41 937 993|
+|Después de la remoción de ribosomales|1 783 499|26 010 606|8 693 462|
+|Después de la remoción de humano|1 344 068|25 601 672| 8 480 902|
+
+```{r, echo = FALSE, include = FALSE}
+# Data import
+readcount <- read.delim("pretreatment_17112021.txt",
+                        header=TRUE,
+                        sep="\t",
+                        check.names = FALSE)
+
+# Reshape of matrix
+readcount <- melt(readcount,
+                  id.vars="muestra")
+
+# Plot
+barplot_rawdata_quality <- ggplot(data = readcount) +
+geom_col(aes(x = muestra,
+             y = value,
+             fill = variable),
+         position=position_dodge()) +
+  labs(x = "",
+       y = "Número de lecturas",
+       title="Conteo de lecturas en el pretratamiento") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme_test() +
+theme(text = element_text(size = 14),
+      legend.title = element_blank(),
+      axis.text.x = element_text(size = 5,
+                                 angle = 90,
+                                 hjust = 1,
+                                 vjust = 0.5))
+
+# SVG creation
+svg(filename = "barplot_rawdata_quality.svg",
+    width = 7,
+    height = 4)
+  print(barplot_rawdata_quality)
+dev.off()
+```
+
+**IMPORTANTE: Se retiraron de los análisis posteriores las siguientes muestras RL619, RL621 y RL625 por su bajo número de lecturas después del pretratamiento.**
+
+```{r, echo = FALSE}
+barplot_rawdata_quality
+```
+
+\newpage
+
+|Muestra|Después de filtros de calidad|Sin ribosomales|Sin humano|
+|-|-|-|-|
+|Promedio todas las muestras|98.35%|20.39%|19.89%|
+
+```{r, echo = FALSE, include = FALSE}
+# Data import
+readcount <- read.delim("pretreatment-ave_17112021.txt",
+                        header=TRUE,
+                        sep="\t",
+                        check.names = FALSE)
+
+# Reshape of matrix
+readcount <- melt(readcount)
+
+# Plot
+barplot_rawdata_quality_group <- ggplot(data = readcount) +
+geom_col(aes(x = muestra,
+             y = value,
+             fill = variable),
+         position=position_dodge()) +
+  labs(x = "",
+       y = "Número de lecturas",
+       title="Conteo de lecturas en el pretratamiento") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme_test() +
+theme(text = element_text(size = 14),
+      legend.title = element_blank(),
+      axis.text.x = element_text(hjust = 0.5))
+
+# SVG creation
+svg(filename = "barplot_rawdata_quality_group.svg",
+    width = 7,
+    height = 4)
+  print(barplot_rawdata_quality_group)
+dev.off()
+```
+
+```{r, echo = FALSE}
+barplot_rawdata_quality_group
+```
+
+\newpage
+
+## Pipeline
+```{r, echo = FALSE}
+mermaid("
+graph LR
+    a[Lecturas filtradas por calidad] --> b[MetaPhlAn, taxonomía]
+      b --> b1[Clasificación taxonómica]
+      b --> b2[Diversidad alfa]
+      b --> b3[Diversidad beta]
+      b --> b4[Especies expresadas diferencialmente]
+    
+    a --> c[HUMAnN3, funcionalidad]
+      c --> c1[Familias de genes]
+      c --> c2[Rutas metabólicas]
+      c --> c3[Cobertura de rutas metabólicas]
+      c --> c4[Expresión diferencial]
+
+
+classDef className1 fill:white,stroke:black
+class a className1
+
+classDef className2 fill:lightblue,stroke:black
+class b,b1,b2,b3,b4 className2
+
+classDef className3 fill:lightgreen,stroke:black
+class c,c1,c2,c3,c4 className3
+")
+```

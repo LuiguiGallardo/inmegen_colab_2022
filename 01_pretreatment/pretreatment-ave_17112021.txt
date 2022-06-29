@@ -1,0 +1,2 @@
+"muestra"	"Datos crudos"	"Filtrado de calidad"	"Remoción de ribosomales"	"Remoción de humano"
+Promedio	42642038	41937994	8693462	8480902

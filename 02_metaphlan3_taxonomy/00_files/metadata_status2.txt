@@ -1,0 +1,38 @@
+sample	Sex	Status_1	Status_2
+RL509-mf	Female	NASH	NASH
+RL511-mf	Female	NASH	NASH
+RL514-mf	Female	Control	NAFL
+RL516-mf	Female	Control	Control no-NAFL
+RL518-mf	Male	NASH	NASH
+RL528-mf	Female	NASH	NASH
+RL568-mf	Female	NASH	NASH
+RL569-mf	Female	Control	Control no-NAFL
+RL573-mf	Female	Control	NAFL
+RL585-mf	Male	Control	NAFL
+RL591-mf	Female	NASH	NASH
+RL601-mf	Male	NASH	NASH
+RL605-mf	Female	NASH	NASH
+RL606-mf	Male	NASH	NASH
+RL607-mf	Female	Control	Control no-NAFL
+RL613-mf	Female	NASH	NASH
+RL616-mf	Female	NASH	NASH
+RL627-mf	Female	Control	Control no-NAFL
+RL628-mf	Female	Control	Control no-NAFL
+RL641-mf	Male	NASH	NASH
+RL651-mf	Female	Control	NAFL
+RL654-mf	Male	Control	NAFL
+RL656-mf	Female	NASH	NASH
+RL659-mf	Female	NASH	NASH
+RL663-mf	Male	NASH	NASH
+RL665-mf	Female	NASH	NASH
+RL667-mf	Female	NASH	NASH
+RL668-mf	Female	NASH	NASH
+RL679-mf	Female	NASH	NASH
+RL680-mf	Female	Control	NAFL
+RL683-mf	Female	NASH	NASH
+RL686-mf	Male	Control	Control no-NAFL
+RL691-mf	Female	Control	NAFL
+RL693-mf	Female	Control	NAFL
+RL703-mf	Female	Control	Control no-NAFL
+RL704-mf	Female	Control	NAFL
+RL725-mf	Female	Control	NAFL

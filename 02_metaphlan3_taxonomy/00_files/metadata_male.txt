@@ -1,0 +1,11 @@
+sample	Sex	Status_1	Status_2
+RL518-mf	Male	NASH	NASH
+RL585-mf	Male	Control	NAFL
+RL601-mf	Male	NASH	NASH
+RL606-mf	Male	NASH	NASH
+RL641-mf	Male	NASH	NASH
+RL654-mf	Male	Control	NAFL
+RL663-mf	Male	NASH	NASH
+RL682-mf	Male	Control	NA
+RL686-mf	Male	Control	Control no-NAFL
+RL700-mf	Male	Control	NA

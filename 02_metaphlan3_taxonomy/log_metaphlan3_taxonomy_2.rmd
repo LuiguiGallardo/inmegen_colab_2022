@@ -1,0 +1,3848 @@
+---
+title: "Colaboración INMEGEN"
+author: "Luigui Gallardo Becerra, Adrián Ochoa Leyva"
+date: "17.01.2022"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Libraries required
+library("colorRamps")
+library("ggplot2")
+library("reshape")
+library("scales")
+library("jcolors")
+library("grid")
+library("RColorBrewer")
+library("dplyr")
+library("ggpubr")
+library("phyloseq")
+library("microbiome")
+library("vegan")
+library("metagMisc")
+library("DiagrammeR")
+library("microbiomeMarker")
+```
+
+## Pipeline
+```{r, echo = FALSE}
+mermaid("
+graph LR
+    a[Lecturas filtradas por calidad] --> b[MetaPhlAn, taxonomía]
+      b --> b1[Clasificación taxonómica]
+      b --> b2[Diversidad alfa]
+      b --> b3[Diversidad beta]
+      b --> b4[Especies expresadas diferencialmente]
+    
+    a --> c[HUMAnN3, funcionalidad]
+      c --> c1[Familias de genes]
+      c --> c2[Rutas metabólicas]
+      c --> c3[Cobertura de rutas metabólicas]
+      c --> c4[Expresión diferencial]
+
+
+classDef className1 fill:white,stroke:black
+class a className1
+
+classDef className2 fill:lightblue,stroke:black
+class b,b1,b2,b3,b4 className2
+
+classDef className3 fill:lightgreen,stroke:black
+class c,c1,c2,c3,c4 className3
+")
+```
+
+\newpage
+## MetaPhlAn3, taxonomía
+
+### Con todas las muestras comparando NASH vs Control
+
+#### Barplots
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq <- normalize(physeq,
+                    method = "TSS")
+
+colnames(tax_table(physeq)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# Phylum level
+phylum <- aggregate_rare(physeq,
+                         level = "Phylum",
+                         detection = 0.0001,
+                         prevalence = 50/100)
+
+barplot_tax_phylum <- plot_bar(phylum,
+                               fill = "Phylum") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Phylum") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_phylum_allsamples.svg")
+print(barplot_tax_phylum)
+dev.off()
+
+# Class level
+class <- aggregate_rare(physeq,
+                         level = "Class",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_class <- plot_bar(class,
+                               fill = "Class") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Class") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_class_allsamples.svg")
+print(barplot_tax_class)
+dev.off()
+
+# Order level
+order <- aggregate_rare(physeq,
+                         level = "Order",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_order <- plot_bar(order,
+                               fill = "Order") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Order") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_order_allsamples.svg")
+print(barplot_tax_order)
+dev.off()
+
+# Family level
+family <- aggregate_rare(physeq,
+                         level = "Family",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_family <- plot_bar(family,
+                               fill = "Family") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Family") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_family_allsamples.svg")
+print(barplot_tax_family)
+dev.off()
+
+# Genera level
+genera <- aggregate_rare(physeq,
+                         level = "Genus",
+                         detection = 0,
+                         prevalence = 0)
+
+genera.df <- phyloseq_to_df(genera,
+                            addtax = FALSE,
+                            addtot = FALSE,
+                            addmaxrank = FALSE,
+                            sorting = "NULL")
+               
+write.table(genera.df,
+            "./00_files/genera_taxonomic_profile_allsamples.tsv",
+            sep = "\t")
+
+genera <- aggregate_rare(physeq,
+                         level = "Genus",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_genera <- plot_bar(genera,
+                               fill = "Genus") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Genus") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_genera_allsamples.svg")
+print(barplot_tax_genera)
+dev.off()
+
+# Species level
+species <- aggregate_rare(physeq,
+                         level = "Species",
+                         detection = 0,
+                         prevalence = 0)
+
+##### Prevotella copri boxplot
+# 
+# p_value <- p_value <- list(c("Control",
+#                              "NASH"))
+# 
+# boxplot_prevotella_copri <- boxplot_abundance(species,
+#                                               x="Status_1",
+#                                               y="Prevotella_copri",
+#                                               show.points = FALSE) +
+#   geom_boxplot(aes(color = Status_1),
+#              outlier.shape = NA) +
+#   geom_point(aes(color = Status_1),
+#     size = 2,
+#     shape = 21,
+#     position = position_jitterdodge()) +
+#   labs(x = "",
+#     y = "Prevotella copri (Abundancia relativa)") +
+#   stat_compare_means(comparisons = p_value,
+#                      method = "wilcox.test") +
+#   theme(legend.position = "none")
+# 
+# ggsave("./01_tax_plots/boxplot_prevotella_copri_allsamples.svg")
+# print(boxplot_prevotella_copri)
+# dev.off()
+
+#####
+
+species.df <- phyloseq_to_df(species,
+                             addtax = FALSE,
+                             addtot = FALSE,
+                             addmaxrank = FALSE,
+                             sorting = "NULL")
+
+write.table(species.df,
+            "./00_files/species_taxonomic_profile_allsamples.tsv",
+            sep = "\t")
+
+species <- aggregate_rare(physeq,
+                         level = "Species",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_species <- plot_bar(species,
+                               fill = "Species") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Species") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_species_allsamples.svg")
+print(barplot_tax_species)
+dev.off()
+
+```
+
+#### LEfSe
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq_lefse <- normalize(physeq,
+                          method = "CPM")
+
+colnames(tax_table(physeq_lefse)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# LEfSe Phylum
+#lefse_phylum <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Phylum",
+#                          group = "Status_1")
+#
+#plot_lefse_phylum <- plot_ef_bar(lefse_phylum)
+#
+#ggsave("./01_tax_plots/metaphlan3_phylum_lefse.svg")
+#print(plot_lefse_phylum)
+#dev.off()
+
+# LEfSe Class
+#lefse_class <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Class",
+#                          group = "Status_1")
+
+#plot_lefse_class <- plot_ef_bar(lefse_class)
+
+#ggsave("./01_tax_plots/metaphlan3_class_lefse.svg")
+#print(plot_lefse_class)
+#dev.off()
+
+# LEfSe Order
+lefse_order <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Order",
+                          group = "Status_1")
+
+plot_lefse_order <- plot_ef_bar(lefse_order)
+
+ggsave("./01_tax_plots/metaphlan3_order_lefse.svg")
+print(plot_lefse_order)
+dev.off()
+
+# LEfSe Family
+lefse_family <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Family",
+                          group = "Status_1")
+
+plot_lefse_family <- plot_ef_bar(lefse_family)
+
+ggsave("./01_tax_plots/metaphlan3_family_lefse.svg")
+print(plot_lefse_family)
+dev.off()
+
+# LEfSe Genera
+lefse_genera <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Genus",
+                          group = "Status_1")
+
+plot_lefse_genera <- plot_ef_bar(lefse_genera)
+
+ggsave("./01_tax_plots/metaphlan3_genera_lefse.svg")
+print(plot_lefse_genera)
+dev.off()
+
+# LEfSe Species
+lefse_species <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Species",
+                          group = "Status_1")
+
+plot_lefse_species <- plot_ef_bar(lefse_species)
+
+ggsave("./01_tax_plots/metaphlan3_species_lefse.svg")
+print(plot_lefse_species)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+barplot_tax_phylum
+
+#plot_lefse_phylum
+
+barplot_tax_class
+
+#plot_lefse_class
+
+barplot_tax_order
+
+plot_lefse_order
+
+barplot_tax_family
+
+plot_lefse_family
+
+barplot_tax_genera
+
+plot_lefse_genera
+
+barplot_tax_species
+
+plot_lefse_species
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control estratificando por género (Male)
+
+#### Barplots
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_male.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq <- normalize(physeq,
+                    method = "TSS")
+
+colnames(tax_table(physeq)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# Phylum level
+phylum <- aggregate_rare(physeq,
+                         level = "Phylum",
+                         detection = 0.0001,
+                         prevalence = 50/100)
+
+barplot_tax_phylum <- plot_bar(phylum,
+                               fill = "Phylum") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Phylum") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_phylum_male_gender.svg")
+print(barplot_tax_phylum)
+dev.off()
+
+# Class level
+class <- aggregate_rare(physeq,
+                         level = "Class",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_class <- plot_bar(class,
+                               fill = "Class") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Class") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_class_male_gender.svg")
+print(barplot_tax_class)
+dev.off()
+
+# Order level
+order <- aggregate_rare(physeq,
+                         level = "Order",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_order <- plot_bar(order,
+                               fill = "Order") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Order") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_order_male_gender.svg")
+print(barplot_tax_order)
+dev.off()
+
+# Family level
+family <- aggregate_rare(physeq,
+                         level = "Family",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_family <- plot_bar(family,
+                               fill = "Family") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Family") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_family_male_gender.svg")
+print(barplot_tax_family)
+dev.off()
+
+# Genera level
+genera <- aggregate_rare(physeq,
+                         level = "Genus",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_genera <- plot_bar(genera,
+                               fill = "Genus") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Genus") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_genera_male_gender.svg")
+print(barplot_tax_genera)
+dev.off()
+
+# Species level
+species <- aggregate_rare(physeq,
+                         level = "Species",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_species <- plot_bar(species,
+                               fill = "Species") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Species") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_species_male_gender.svg")
+print(barplot_tax_species)
+dev.off()
+
+```
+
+#### LEfSe
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq_lefse <- normalize(physeq,
+                          method = "CPM")
+
+colnames(tax_table(physeq_lefse)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# LEfSe Phylum
+#lefse_phylum <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Phylum",
+#                          group = "Status_1")
+#
+#plot_lefse_phylum <- plot_ef_bar(lefse_phylum)
+#
+#ggsave("metaphlan3_phylum_lefse_male_gender.svg")
+#print(plot_lefse_phylum)
+#dev.off()
+
+# LEfSe Class
+#lefse_class <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Class",
+#                          group = "Status_1")
+#plot_lefse_class <- plot_ef_bar(lefse_class)
+#ggsave("metaphlan3_class_lefse_male_gender.svg")
+#print(plot_lefse_class)
+#dev.off()
+
+## LEfSe Order
+#lefse_order <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Order",
+#                          group = "Status_1")
+#
+#plot_lefse_order <- plot_ef_bar(lefse_order)
+#
+#ggsave("metaphlan3_order_lefse_male_gender.svg")
+#print(plot_lefse_order)
+#dev.off()
+
+# LEfSe Family
+#lefse_family <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Family",
+#                          group = "Status_1")
+#
+#plot_lefse_family <- plot_ef_bar(lefse_family)
+#
+#ggsave("metaphlan3_family_lefse_male_gender.svg")
+#print(plot_lefse_family)
+#dev.off()
+
+# LEfSe Genera
+#lefse_genera <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Genus",
+#                          group = "Status_1")
+#
+#plot_lefse_genera <- plot_ef_bar(lefse_genera)
+#
+#ggsave("metaphlan3_genera_lefse_male_gender.svg")
+#print(plot_lefse_genera)
+#dev.off()
+
+# LEfSe Species
+lefse_species <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Species",
+                          group = "Status_1")
+
+plot_lefse_species <- plot_ef_bar(lefse_species)
+
+ggsave("./01_tax_plots/metaphlan3_species_lefse_male_gender.svg")
+print(plot_lefse_species)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+barplot_tax_phylum
+
+#plot_lefse_phylum
+
+barplot_tax_class
+
+#plot_lefse_class
+
+barplot_tax_order
+
+#plot_lefse_order
+
+barplot_tax_family
+
+#plot_lefse_family
+
+barplot_tax_genera
+
+#plot_lefse_genera
+
+barplot_tax_species
+
+plot_lefse_species
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control estratificando por género (Female)
+
+#### Barplots
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_female.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq <- normalize(physeq,
+                    method = "TSS")
+
+colnames(tax_table(physeq)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# Phylum level
+phylum <- aggregate_rare(physeq,
+                         level = "Phylum",
+                         detection = 0.0001,
+                         prevalence = 50/100)
+
+barplot_tax_phylum <- plot_bar(phylum,
+                               fill = "Phylum") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Phylum") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_phylum_female_gender.svg")
+print(barplot_tax_phylum)
+dev.off()
+
+# Class level
+class <- aggregate_rare(physeq,
+                         level = "Class",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_class <- plot_bar(class,
+                               fill = "Class") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Class") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_class_female_gender.svg")
+print(barplot_tax_class)
+dev.off()
+
+# Order level
+order <- aggregate_rare(physeq,
+                         level = "Order",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_order <- plot_bar(order,
+                               fill = "Order") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Order") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_order_female_gender.svg")
+print(barplot_tax_order)
+dev.off()
+
+# Family level
+family <- aggregate_rare(physeq,
+                         level = "Family",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_family <- plot_bar(family,
+                               fill = "Family") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Family") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_family_female_gender.svg")
+print(barplot_tax_family)
+dev.off()
+
+# Genera level
+genera <- aggregate_rare(physeq,
+                         level = "Genus",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_genera <- plot_bar(genera,
+                               fill = "Genus") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Genus") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_genera_female_gender.svg")
+print(barplot_tax_genera)
+dev.off()
+
+# Species level
+species <- aggregate_rare(physeq,
+                         level = "Species",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_species <- plot_bar(species,
+                               fill = "Species") +
+facet_grid(Sex~Status_1 ,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Species") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_species_female_gender.svg")
+print(barplot_tax_species)
+dev.off()
+
+```
+
+#### LEfSe
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq_lefse <- normalize(physeq,
+                          method = "CPM")
+
+colnames(tax_table(physeq_lefse)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# LEfSe Phylum
+#lefse_phylum <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Phylum",
+#                          group = "Status_1")
+#
+#plot_lefse_phylum <- plot_ef_bar(lefse_phylum)
+#
+#ggsave("./01_tax_plots/metaphlan3_phylum_lefse_female_gender.svg")
+#print(plot_lefse_phylum)
+#dev.off()
+
+# LEfSe Class
+#lefse_class <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Class",
+#                          group = "Status_1")
+#plot_lefse_class <- plot_ef_bar(lefse_class)
+#ggsave("./01_tax_plots/metaphlan3_class_lefse_female_gender.svg")
+#print(plot_lefse_class)
+#dev.off()
+
+## LEfSe Order
+lefse_order <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Order",
+                          group = "Status_1")
+
+plot_lefse_order <- plot_ef_bar(lefse_order)
+
+ggsave("./01_tax_plots/metaphlan3_order_lefse_female_gender.svg")
+print(plot_lefse_order)
+dev.off()
+
+# LEfSe Family
+lefse_family <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Family",
+                          group = "Status_1")
+
+plot_lefse_family <- plot_ef_bar(lefse_family)
+
+ggsave("./01_tax_plots/metaphlan3_family_lefse_female_gender.svg")
+print(plot_lefse_family)
+dev.off()
+
+# LEfSe Genera
+lefse_genera <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Genus",
+                          group = "Status_1")
+
+plot_lefse_genera <- plot_ef_bar(lefse_genera)
+
+ggsave("./01_tax_plots/metaphlan3_genera_lefse_female_gender.svg")
+print(plot_lefse_genera)
+dev.off()
+
+# LEfSe Species
+lefse_species <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Species",
+                          group = "Status_1")
+
+plot_lefse_species <- plot_ef_bar(lefse_species)
+
+ggsave("./01_tax_plots/metaphlan3_species_lefse_female_gender.svg")
+print(plot_lefse_species)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+barplot_tax_phylum
+
+#plot_lefse_phylum
+
+barplot_tax_class
+
+#plot_lefse_class
+
+barplot_tax_order
+
+plot_lefse_order
+
+barplot_tax_family
+
+plot_lefse_family
+
+barplot_tax_genera
+
+plot_lefse_genera
+
+barplot_tax_species
+
+plot_lefse_species
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no NAFL vs NAFL
+
+#### Barplots
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_status2.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq <- normalize(physeq,
+                    method = "TSS")
+
+colnames(tax_table(physeq)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# Phylum level
+phylum <- aggregate_rare(physeq,
+                         level = "Phylum",
+                         detection = 0.0001,
+                         prevalence = 50/100)
+
+barplot_tax_phylum <- plot_bar(phylum,
+                               fill = "Phylum") +
+facet_grid(.~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Phylum") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_phylum_status2.svg")
+print(barplot_tax_phylum)
+dev.off()
+
+# Class level
+class <- aggregate_rare(physeq,
+                         level = "Class",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_class <- plot_bar(class,
+                               fill = "Class") +
+facet_grid(.~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Class") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_class_status2.svg")
+print(barplot_tax_class)
+dev.off()
+
+# Order level
+order <- aggregate_rare(physeq,
+                         level = "Order",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_order <- plot_bar(order,
+                               fill = "Order") +
+facet_grid(.~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Order") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_order_status2.svg")
+print(barplot_tax_order)
+dev.off()
+
+# Family level
+family <- aggregate_rare(physeq,
+                         level = "Family",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_family <- plot_bar(family,
+                               fill = "Family") +
+facet_grid(.~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Family") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_family_status2.svg")
+print(barplot_tax_family)
+dev.off()
+
+# Genera level
+genera <- aggregate_rare(physeq,
+                         level = "Genus",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_genera <- plot_bar(genera,
+                               fill = "Genus") +
+facet_grid(.~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Genus") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_genera_status2.svg")
+print(barplot_tax_genera)
+dev.off()
+
+# Species level
+species <- aggregate_rare(physeq,
+                         level = "Species",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_species <- plot_bar(species,
+                               fill = "Species") +
+facet_grid(.~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Species") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_species_status2.svg")
+print(barplot_tax_species)
+dev.off()
+
+```
+
+#### LEfSe
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq_lefse <- normalize(physeq,
+                          method = "CPM")
+
+colnames(tax_table(physeq_lefse)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# LEfSe Phylum
+#lefse_phylum <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Phylum",
+#                          group = "Status_2")
+#
+#plot_lefse_phylum <- plot_ef_bar(lefse_phylum)
+#
+#ggsave("./01_tax_plots/metaphlan3_phylum_lefse_status2.svg")
+#print(plot_lefse_phylum)
+#dev.off()
+
+# LEfSe Class
+#lefse_class <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Class",
+#                          group = "Status_2")
+#plot_lefse_class <- plot_ef_bar(lefse_class)
+#ggsave("./01_tax_plots/metaphlan3_class_lefse_status2r.svg")
+#print(plot_lefse_class)
+#dev.off()
+
+# LEfSe Order
+lefse_order <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Order",
+                          group = "Status_2")
+
+plot_lefse_order <- plot_ef_bar(lefse_order)
+
+ggsave("./01_tax_plots/metaphlan3_order_lefse_status2.svg")
+print(plot_lefse_order)
+dev.off()
+
+# LEfSe Family
+lefse_family <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Family",
+                          group = "Status_2")
+
+plot_lefse_family <- plot_ef_bar(lefse_family)
+
+ggsave("./01_tax_plots/metaphlan3_family_lefse_status2.svg")
+print(plot_lefse_family)
+dev.off()
+
+# LEfSe Genera
+lefse_genera <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Genus",
+                          group = "Status_2")
+
+plot_lefse_genera <- plot_ef_bar(lefse_genera)
+
+ggsave("./01_tax_plots/metaphlan3_genera_lefse_status2.svg")
+print(plot_lefse_genera)
+dev.off()
+
+# LEfSe Species
+lefse_species <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Species",
+                          group = "Status_2")
+
+plot_lefse_species <- plot_ef_bar(lefse_species)
+
+ggsave("./01_tax_plots/metaphlan3_species_lefse_status2.svg")
+print(plot_lefse_species)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+barplot_tax_phylum
+
+#plot_lefse_phylum
+
+barplot_tax_class
+
+#plot_lefse_class
+
+barplot_tax_order
+
+plot_lefse_order
+
+barplot_tax_family
+
+plot_lefse_family
+
+barplot_tax_genera
+
+plot_lefse_genera
+
+barplot_tax_species
+
+plot_lefse_species
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no NAFL vs NAFL estratificando por género (Male)
+
+#### Barplots
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_male2.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq <- normalize(physeq,
+                    method = "TSS")
+
+colnames(tax_table(physeq)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# Phylum level
+phylum <- aggregate_rare(physeq,
+                         level = "Phylum",
+                         detection = 0.0001,
+                         prevalence = 50/100)
+
+barplot_tax_phylum <- plot_bar(phylum,
+                               fill = "Phylum") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Phylum") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_phylum_male_status2.svg")
+print(barplot_tax_phylum)
+dev.off()
+
+# Class level
+class <- aggregate_rare(physeq,
+                         level = "Class",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_class <- plot_bar(class,
+                               fill = "Class") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Class") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_class_male_status2.svg")
+print(barplot_tax_class)
+dev.off()
+
+# Order level
+order <- aggregate_rare(physeq,
+                         level = "Order",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_order <- plot_bar(order,
+                               fill = "Order") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Order") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_order_male_status2.svg")
+print(barplot_tax_order)
+dev.off()
+
+# Family level
+family <- aggregate_rare(physeq,
+                         level = "Family",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_family <- plot_bar(family,
+                               fill = "Family") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Family") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_family_male_status2.svg")
+print(barplot_tax_family)
+dev.off()
+
+# Genera level
+genera <- aggregate_rare(physeq,
+                         level = "Genus",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_genera <- plot_bar(genera,
+                               fill = "Genus") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Genus") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_genera_male_status2.svg")
+print(barplot_tax_genera)
+dev.off()
+
+# Species level
+species <- aggregate_rare(physeq,
+                         level = "Species",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_species <- plot_bar(species,
+                               fill = "Species") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Species") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_species_male_status2.svg")
+print(barplot_tax_species)
+dev.off()
+
+```
+
+#### LEfSe
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq_lefse <- normalize(physeq,
+                          method = "CPM")
+
+colnames(tax_table(physeq_lefse)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# LEfSe Phylum
+# lefse_phylum <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Phylum",
+#                          group = "Status_1")
+# 
+# plot_lefse_phylum <- plot_ef_bar(lefse_phylum)
+# 
+# ggsave("./01_tax_plots/metaphlan3_phylum_lefse_male_status2.svg")
+# print(plot_lefse_phylum)
+# dev.off()
+
+# LEfSe Class
+# lefse_class <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Class",
+#                          group = "Status_1")
+# plot_lefse_class <- plot_ef_bar(lefse_class)
+# ggsave("./01_tax_plots/metaphlan3_class_lefse_male_status2.svg")
+# print(plot_lefse_class)
+# dev.off()
+
+# LEfSe Order
+# lefse_order <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Order",
+#                          group = "Status_1")
+# 
+# plot_lefse_order <- plot_ef_bar(lefse_order)
+# 
+# ggsave("./01_tax_plots/metaphlan3_order_lefse_male_status2.svg")
+# print(plot_lefse_order)
+# dev.off()
+
+# LEfSe Family
+# lefse_family <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Family",
+#                          group = "Status_1")
+# 
+# plot_lefse_family <- plot_ef_bar(lefse_family)
+# 
+# ggsave("./01_tax_plots/metaphlan3_family_lefse_male_status2.svg")
+# print(plot_lefse_family)
+# dev.off()
+
+# LEfSe Genera
+# lefse_genera <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Genus",
+#                          group = "Status_1")
+# 
+# plot_lefse_genera <- plot_ef_bar(lefse_genera)
+# 
+# ggsave("./01_tax_plots/metaphlan3_genera_lefse_male_status2.svg")
+# print(plot_lefse_genera)
+# dev.off()
+
+# LEfSe Species
+# lefse_species <- run_lefse(physeq_lefse,
+#                           norm = "none",
+#                           taxa_rank = "Species",
+#                           group = "Status_2")
+# 
+# plot_lefse_species <- plot_ef_bar(lefse_species)
+# 
+# ggsave("./01_tax_plots/metaphlan3_species_lefse_male_status2.svg")
+# print(plot_lefse_species)
+# dev.off()
+
+```
+
+```{r, echo = FALSE}
+barplot_tax_phylum
+
+#plot_lefse_phylum
+
+barplot_tax_class
+
+#plot_lefse_class
+
+barplot_tax_order
+
+#plot_lefse_order
+
+barplot_tax_family
+
+#plot_lefse_family
+
+barplot_tax_genera
+
+#plot_lefse_genera
+
+barplot_tax_species
+
+#plot_lefse_species
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no NAFL vs NAFL estratificando por género (Female)
+
+#### Barplots
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_female.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq <- normalize(physeq,
+                    method = "TSS")
+
+colnames(tax_table(physeq)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# Phylum level
+phylum <- aggregate_rare(physeq,
+                         level = "Phylum",
+                         detection = 0.0001,
+                         prevalence = 50/100)
+
+barplot_tax_phylum <- plot_bar(phylum,
+                               fill = "Phylum") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Phylum") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_phylum_female_status2.svg")
+print(barplot_tax_phylum)
+dev.off()
+
+# Class level
+class <- aggregate_rare(physeq,
+                         level = "Class",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_class <- plot_bar(class,
+                               fill = "Class") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Class") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_class_female_status2.svg")
+print(barplot_tax_class)
+dev.off()
+
+# Order level
+order <- aggregate_rare(physeq,
+                         level = "Order",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_order <- plot_bar(order,
+                               fill = "Order") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Order") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_order_female_status2.svg")
+print(barplot_tax_order)
+dev.off()
+
+# Family level
+family <- aggregate_rare(physeq,
+                         level = "Family",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_family <- plot_bar(family,
+                               fill = "Family") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Family") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_family_female_status2.svg")
+print(barplot_tax_family)
+dev.off()
+
+# Genera level
+genera <- aggregate_rare(physeq,
+                         level = "Genus",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_genera <- plot_bar(genera,
+                               fill = "Genus") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Genus") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_genera_female_status2.svg")
+print(barplot_tax_genera)
+dev.off()
+
+# Species level
+species <- aggregate_rare(physeq,
+                         level = "Species",
+                         detection = 0.01,
+                         prevalence = 50/100)
+
+barplot_tax_species <- plot_bar(species,
+                               fill = "Species") +
+facet_grid(Sex~Status_2,
+           scales = "free") +
+labs(x = "",
+    y = "Relative abundance",
+    fill = "Species") +
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_continuous(expand = c(0, 0)) +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+ggsave("./01_tax_plots/metaphlan3_species_female_status2.svg")
+print(barplot_tax_species)
+dev.off()
+
+```
+
+#### LEfSe
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+physeq_lefse <- normalize(physeq,
+                          method = "CPM")
+
+colnames(tax_table(physeq_lefse)) <- c("Kingdom",
+                                 "Phylum",
+                                 "Class",
+                                 "Order",
+                                 "Family",
+                                 "Genus",
+                                 "Species")
+
+theme_set(theme_bw())
+
+# LEfSe Phylum
+#lefse_phylum <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Phylum",
+#                          group = "Status_2")
+#
+#plot_lefse_phylum <- plot_ef_bar(lefse_phylum)
+#
+#ggsave("./01_tax_plots/metaphlan3_phylum_lefse_female_status2.svg")
+#print(plot_lefse_phylum)
+#dev.off()
+
+# LEfSe Class
+#lefse_class <- run_lefse(physeq_lefse,
+#                          norm = "none",
+#                          taxa_rank = "Class",
+#                          group = "Status_2")
+#plot_lefse_class <- plot_ef_bar(lefse_class)
+#ggsave("./01_tax_plots/metaphlan3_class_lefse_female_status2.svg")
+#print(plot_lefse_class)
+#dev.off()
+
+## LEfSe Order
+lefse_order <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Order",
+                          group = "Status_2")
+
+plot_lefse_order <- plot_ef_bar(lefse_order)
+
+ggsave("./01_tax_plots/metaphlan3_order_lefse_female_status2.svg")
+print(plot_lefse_order)
+dev.off()
+
+# LEfSe Family
+lefse_family <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Family",
+                          group = "Status_2")
+
+plot_lefse_family <- plot_ef_bar(lefse_family)
+
+ggsave("./01_tax_plots/metaphlan3_family_lefse_female_status2.svg")
+print(plot_lefse_family)
+dev.off()
+
+# LEfSe Genera
+lefse_genera <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Genus",
+                          group = "Status_2")
+
+plot_lefse_genera <- plot_ef_bar(lefse_genera)
+
+ggsave("./01_tax_plots/metaphlan3_genera_lefse_female_status2.svg")
+print(plot_lefse_genera)
+dev.off()
+
+# LEfSe Species
+lefse_species <- run_lefse(physeq_lefse,
+                          norm = "none",
+                          taxa_rank = "Species",
+                          group = "Status_2")
+
+plot_lefse_species <- plot_ef_bar(lefse_species)
+
+ggsave("./01_tax_plots/metaphlan3_species_lefse_female_status2.svg")
+print(plot_lefse_species)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+barplot_tax_phylum
+
+#plot_lefse_phylum
+
+barplot_tax_class
+
+#plot_lefse_class
+
+barplot_tax_order
+
+plot_lefse_order
+
+barplot_tax_family
+
+plot_lefse_family
+
+barplot_tax_genera
+
+plot_lefse_genera
+
+barplot_tax_species
+
+plot_lefse_species
+```
+
+\newpage
+
+## MetaPhlAn3, diversidad alfa
+
+### Con todas las muestras comparando NASH vs Control
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Observed species
+alpha_observed <- plot_richness(rarefied,
+                                measures = c("Observed"),
+                                color = "Status_1") +
+labs(x = "",
+    y = "Observed species") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_observed_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_observed_status1.svg")
+print(alpha_observed)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_observed_curve_status1.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Chao1
+alpha_chao1 <- plot_richness(rarefied,
+                             measures = c("Chao1"),
+                             color = "Status_1") +
+labs(x = "",
+    y = "Chao1 Index") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_chao1_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_chao1_status1.svg")
+print(alpha_chao1)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_chao1_curve_status1.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Shannon
+alpha_shannon <- plot_richness(rarefied,
+                               measures = c("Shannon"),
+                               color = "Status_1") +
+labs(x = "",
+    y = "Shannon Index") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_shannon_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_shannon_status1.svg")
+print(alpha_shannon)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_shannon_curve_status1.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# All metrics
+
+p_value <- list(c("Control",
+                  "NASH"))
+
+alpha <- plot_richness(rarefied,
+              measures = c("Observed",
+                           "Chao1",
+                           "Shannon"),
+              x = "Status_1",
+              color = "Status_1") +
+  geom_boxplot() +
+  labs(x = "",
+       fill = "") +
+  theme(legend.position='none',
+        axis.text.x = element_text(size = 7,
+                                   angle = 360,
+                                   hjust = 0.5)) +
+  stat_compare_means(comparisons = p_value,
+                     method = "wilcox.test")
+
+alpha
+
+ggsave("./02_adiv_plots/alpha_status1.svg")
+print(alpha)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+alpha_observed
+
+alpha_chao1
+
+alpha_shannon
+
+alpha
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control estratificando por género (Male)
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_male2.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Observed species
+alpha_observed <- plot_richness(rarefied,
+                                measures = c("Observed"),
+                                color = "Status_1") +
+labs(x = "",
+    y = "Observed species") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_observed_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_observed_status1_male.svg")
+print(alpha_observed)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_observed_curve_status1_male.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Chao1
+alpha_chao1 <- plot_richness(rarefied,
+                             measures = c("Chao1"),
+                             color = "Status_1") +
+labs(x = "",
+    y = "Chao1 Index") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_chao1_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_chao1_status1_male.svg")
+print(alpha_chao1)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_chao1_curve_status1_male.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Shannon
+alpha_shannon <- plot_richness(rarefied,
+                               measures = c("Shannon"),
+                               color = "Status_1") +
+labs(x = "",
+    y = "Shannon Index") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_shannon_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_shannon_status1_male.svg")
+print(alpha_shannon)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_shannon_curve_status1_male.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# All metrics
+
+p_value <- list(c("Control",
+                  "NASH"))
+
+alpha <- plot_richness(rarefied,
+              measures = c("Observed",
+                           "Chao1",
+                           "Shannon"),
+              x = "Status_1",
+              color = "Status_1") +
+  geom_boxplot() +
+  labs(x = "",
+       fill = "") +
+  theme(legend.position='none',
+        axis.text.x = element_text(size = 7,
+                                   angle = 360,
+                                   hjust = 0.5)) +
+  stat_compare_means(comparisons = p_value,
+                     method = "wilcox.test")
+
+alpha
+
+ggsave("./02_adiv_plots/alpha_status1_male.svg")
+print(alpha)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+alpha_observed
+
+alpha_chao1
+
+alpha_shannon
+
+alpha
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control estratificando por género (Female)
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_female.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Observed species
+alpha_observed <- plot_richness(rarefied,
+                                measures = c("Observed"),
+                                color = "Status_1") +
+labs(x = "",
+    y = "Observed species") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_observed_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_observed_status1_female.svg")
+print(alpha_observed)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_observed_curve_status1_female.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Chao1
+alpha_chao1 <- plot_richness(rarefied,
+                             measures = c("Chao1"),
+                             color = "Status_1") +
+labs(x = "",
+    y = "Chao1 Index") +
+facet_grid(.~Status_1,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_chao1_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_chao1_status1_female.svg")
+print(alpha_chao1)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_chao1_curve_status1_female.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Shannon
+alpha_shannon <- plot_richness(rarefied,
+                               measures = c("Shannon"),
+                               color = "Status_1") +
+labs(x = "",
+    y = "Shannon Index") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_shannon_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_shannon_status1_female.svg")
+print(alpha_shannon)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_shannon_curve_status1_female.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# All metrics
+
+p_value <- list(c("Control",
+                  "NASH"))
+                  
+alpha <- plot_richness(rarefied,
+              measures = c("Observed",
+                           "Chao1",
+                           "Shannon"),
+              x = "Status_2",
+              color = "Status_2") +
+  geom_boxplot() +
+  labs(x = "",
+       fill = "") +
+  theme(legend.position='none',
+        axis.text.x = element_text(size = 7,
+                                   angle = 360,
+                                   hjust = 0.5)) +
+  stat_compare_means(comparisons = p_value,
+                     method = "wilcox.test")
+
+alpha
+
+ggsave("./02_adiv_plots/alpha_status1_female.svg")
+print(alpha)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+alpha_observed
+
+alpha_chao1
+
+alpha_shannon
+
+alpha
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no-NAFL vs NAFL
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_status2.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Observed species
+alpha_observed <- plot_richness(rarefied,
+                                measures = c("Observed"),
+                                color = "Status_2") +
+labs(x = "",
+    y = "Observed species") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_observed_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_observed_status2.svg")
+print(alpha_observed)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_observed_curve_status2.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Chao1
+alpha_chao1 <- plot_richness(rarefied,
+                             measures = c("Chao1"),
+                             color = "Status_2") +
+labs(x = "",
+    y = "Chao1 Index") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_chao1_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_chao1_status2.svg")
+print(alpha_chao1)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_chao1_curve_status2.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Shannon
+alpha_shannon <- plot_richness(rarefied,
+                               measures = c("Shannon"),
+                               color = "Status_2") +
+labs(x = "",
+    y = "Shannon Index") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_shannon_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_shannon_status2.svg")
+print(alpha_shannon)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_shannon_curve_status2.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# All metrics
+p_value <- list(c("NASH","Control no-NAFL"),
+                c("NASH", "NAFL"),
+                c("NAFL", "Control no-NAFL"))
+
+alpha <- plot_richness(rarefied,
+              measures = c("Observed",
+                           "Chao1",
+                           "Shannon"),
+              x = "Status_2",
+              color = "Status_2") +
+  geom_boxplot() +
+  labs(x = "",
+       fill = "") +
+  theme(legend.position='none',
+        axis.text.x = element_text(size = 7,
+                                   angle = 360,
+                                   hjust = 0.5)) +
+  stat_compare_means(comparisons = p_value,
+                     method = "wilcox.test")
+
+alpha
+
+ggsave("./02_adiv_plots/alpha_status2.svg")
+print(alpha)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+alpha_observed
+
+alpha_chao1
+
+alpha_shannon
+
+alpha
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no-NAFL vs NAFL estratificando por género (Male)
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_male.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Observed species
+alpha_observed <- plot_richness(rarefied,
+                                measures = c("Observed"),
+                                color = "Status_2") +
+labs(x = "",
+    y = "Observed species") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_observed_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_observed_status2_male.svg")
+print(alpha_observed)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_observed_curve_status2_male.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Chao1
+alpha_chao1 <- plot_richness(rarefied,
+                             measures = c("Chao1"),
+                             color = "Status_2") +
+labs(x = "",
+    y = "Chao1 Index") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_chao1_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_chao1_status2_male.svg")
+print(alpha_chao1)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_chao1_curve_status2_male.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Shannon
+alpha_shannon <- plot_richness(rarefied,
+                               measures = c("Shannon"),
+                               color = "Status_2") +
+labs(x = "",
+    y = "Shannon Index") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_shannon_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_shannon_status2_male.svg")
+print(alpha_shannon)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_shannon_curve_status2_male.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# All metrics
+p_value <- list(c("NASH","Control no-NAFL"),
+                c("NASH", "NAFL"),
+                c("NAFL", "Control no-NAFL"))
+
+alpha <- plot_richness(rarefied,
+              measures = c("Observed",
+                           "Chao1",
+                           "Shannon"),
+              x = "Status_2",
+              color = "Status_2") +
+  geom_boxplot() +
+  labs(x = "",
+       fill = "") +
+  theme(legend.position='none',
+        axis.text.x = element_text(size = 7,
+                                   angle = 360,
+                                   hjust = 0.5)) +
+  stat_compare_means(comparisons = p_value,
+                     method = "wilcox.test")
+
+alpha
+
+ggsave("./02_adiv_plots/alpha_status2_male.svg")
+print(alpha)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+alpha_observed
+
+alpha_chao1
+
+alpha_shannon
+
+alpha
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no-NAFL vs NAFL estratificando por género (Female)
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_female.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Observed species
+alpha_observed <- plot_richness(rarefied,
+                                measures = c("Observed"),
+                                color = "Status_2") +
+labs(x = "",
+    y = "Observed species") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_observed_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_observed_status2_female.svg")
+print(alpha_observed)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_observed_curve_status2_female.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Chao1
+alpha_chao1 <- plot_richness(rarefied,
+                             measures = c("Chao1"),
+                             color = "Status_2") +
+labs(x = "",
+    y = "Chao1 Index") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_chao1_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_chao1_status2_female.svg")
+print(alpha_chao1)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_chao1_curve_status2_female.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# Shannon
+alpha_shannon <- plot_richness(rarefied,
+                               measures = c("Shannon"),
+                               color = "Status_2") +
+labs(x = "",
+    y = "Shannon Index") +
+facet_grid(.~Status_2,
+           scales = "free_x") +
+theme(axis.text.x = element_text(size = 7,
+                                 angle = 90,
+                                 vjust = 0.5))
+
+alpha_shannon_curve <- rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+
+ggsave("./02_adiv_plots/alpha_shannon_status2_female.svg")
+print(alpha_shannon)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+svg(filename="./02_adiv_plots/alpha_shannon_curve_status2_female.svg")
+rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5)
+dev.off()
+
+# All metrics
+p_value <- list(c("NASH","Control no-NAFL"),
+                c("NASH", "NAFL"),
+                c("NAFL", "Control no-NAFL"))
+
+alpha <- plot_richness(rarefied,
+              measures = c("Observed",
+                           "Chao1",
+                           "Shannon"),
+              x = "Status_2",
+              color = "Status_2") +
+  geom_boxplot() +
+  labs(x = "",
+       fill = "") +
+  theme(legend.position='none',
+        axis.text.x = element_text(size = 7,
+                                   angle = 360,
+                                   hjust = 0.5)) +
+  stat_compare_means(comparisons = p_value,
+                     method = "wilcox.test")
+
+alpha
+
+ggsave("./02_adiv_plots/alpha_status2_female.svg")
+print(alpha)
+print(rarecurve(t(otu_table(rarefied)),
+                                 step=50,
+                                 cex = 0.5))
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+alpha_observed
+
+alpha_chao1
+
+alpha_shannon
+
+alpha
+```
+
+\newpage
+## MetaPhlAn3, diversidad beta
+
+### Con todas las muestras comparando NASH vs Control
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Bray-Curtis PCoA
+braycurtis_dist = phyloseq::distance(rarefied,
+                                     method="bray")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="bray")
+
+# 1 vs 2
+beta_braycurtis_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs2_status1.svg")
+  print(beta_braycurtis_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_braycurtis_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs3_status1.svg")
+  print(beta_braycurtis_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_braycurtis_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_2vs3_status1.svg")
+  print(beta_braycurtis_2vs3)
+dev.off()
+
+# Jaccard PCoA
+jaccard_dist = phyloseq::distance(rarefied,
+                                  method="jaccard")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="jaccard")
+
+# 1 vs 2
+beta_jaccard_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs2_status1.svg")
+  print(beta_jaccard_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_jaccard_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs3_status1.svg")
+  print(beta_jaccard_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_jaccard_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_2vs3_status1.svg")
+  print(beta_jaccard_2vs3)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+beta_braycurtis_1vs2
+beta_braycurtis_1vs3
+beta_braycurtis_2vs3
+```
+
+```{r, echo = FALSE}
+beta_jaccard_1vs2
+beta_jaccard_1vs3
+beta_jaccard_2vs3
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control contrastando géneros
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Bray-Curtis PCoA
+braycurtis_dist = phyloseq::distance(rarefied,
+                                     method="bray")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="bray")
+
+# 1 vs 2
+beta_braycurtis_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs2_status1_gender.svg")
+  print(beta_braycurtis_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_braycurtis_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs3_status1_gender.svg")
+  print(beta_braycurtis_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_braycurtis_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_2vs3_status1_gender.svg")
+  print(beta_braycurtis_2vs3)
+dev.off()
+
+# Jaccard PCoA
+jaccard_dist = phyloseq::distance(rarefied,
+                                  method="jaccard")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="jaccard")
+
+# 1 vs 2
+beta_jaccard_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs2_status1_gender.svg")
+  print(beta_jaccard_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_jaccard_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs3_status1_gender.svg")
+  print(beta_jaccard_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_jaccard_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_2vs3_status1_gender.svg")
+  print(beta_jaccard_2vs3)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+beta_braycurtis_1vs2
+beta_braycurtis_1vs3
+beta_braycurtis_2vs3
+```
+
+```{r, echo = FALSE}
+beta_jaccard_1vs2
+beta_jaccard_1vs3
+beta_jaccard_2vs3
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control estratificando por género (Male)
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_male.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Bray-Curtis PCoA
+braycurtis_dist = phyloseq::distance(rarefied,
+                                     method="bray")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="bray")
+
+# 1 vs 2
+beta_braycurtis_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs2_status1_male.svg")
+  print(beta_braycurtis_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_braycurtis_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs3_status1_male.svg")
+  print(beta_braycurtis_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_braycurtis_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_2vs3_status1_male.svg")
+  print(beta_braycurtis_2vs3)
+dev.off()
+
+# Jaccard PCoA
+jaccard_dist = phyloseq::distance(rarefied,
+                                  method="jaccard")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="jaccard")
+
+# 1 vs 2
+beta_jaccard_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs2_status1_male.svg")
+  print(beta_jaccard_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_jaccard_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs3_status1_male.svg")
+  print(beta_jaccard_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_jaccard_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_2vs3_status1_male.svg")
+  print(beta_jaccard_2vs3)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+beta_braycurtis_1vs2
+beta_braycurtis_1vs3
+beta_braycurtis_2vs3
+```
+
+```{r, echo = FALSE}
+beta_jaccard_1vs2
+beta_jaccard_1vs3
+beta_jaccard_2vs3
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control estratificando por género (Female)
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_female.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Bray-Curtis PCoA
+braycurtis_dist = phyloseq::distance(rarefied,
+                                     method="bray")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="bray")
+
+# 1 vs 2
+beta_braycurtis_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs2_status1_female.svg")
+  print(beta_braycurtis_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_braycurtis_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs3_status1_female.svg")
+  print(beta_braycurtis_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_braycurtis_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_2vs3_status1_female.svg")
+  print(beta_braycurtis_2vs3)
+dev.off()
+
+# Jaccard PCoA
+jaccard_dist = phyloseq::distance(rarefied,
+                                  method="jaccard")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="jaccard")
+
+# 1 vs 2
+beta_jaccard_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs2_status1_female.svg")
+  print(beta_jaccard_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_jaccard_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs3_status1_female.svg")
+  print(beta_jaccard_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_jaccard_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_1",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_2vs3_status1_female.svg")
+  print(beta_jaccard_2vs3)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+beta_braycurtis_1vs2
+beta_braycurtis_1vs3
+beta_braycurtis_2vs3
+```
+
+```{r, echo = FALSE}
+beta_jaccard_1vs2
+beta_jaccard_1vs3
+beta_jaccard_2vs3
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no-NAFL vs NAFL
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_status2.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Bray-Curtis PCoA
+braycurtis_dist = phyloseq::distance(rarefied,
+                                     method="bray")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="bray")
+
+# 1 vs 2
+beta_braycurtis_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs2_status2.svg")
+  print(beta_braycurtis_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_braycurtis_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs3_status2.svg")
+  print(beta_braycurtis_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_braycurtis_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_2vs3_status2.svg")
+  print(beta_braycurtis_2vs3)
+dev.off()
+
+# Jaccard PCoA
+jaccard_dist = phyloseq::distance(rarefied,
+                                  method="jaccard")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="jaccard")
+
+# 1 vs 2
+beta_jaccard_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs2_status2.svg")
+  print(beta_jaccard_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_jaccard_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs3_status2.svg")
+  print(beta_jaccard_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_jaccard_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_2vs3_status2.svg")
+  print(beta_jaccard_2vs3)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+beta_braycurtis_1vs2
+beta_braycurtis_1vs3
+beta_braycurtis_2vs3
+```
+
+```{r, echo = FALSE}
+beta_jaccard_1vs2
+beta_jaccard_1vs3
+beta_jaccard_2vs3
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no-NAFL vs NAFL contrastando géneros
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_status2.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Bray-Curtis PCoA
+braycurtis_dist = phyloseq::distance(rarefied,
+                                     method="bray")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="bray")
+
+# 1 vs 2
+beta_braycurtis_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs2_status2_gender.svg")
+  print(beta_braycurtis_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_braycurtis_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs3_status2_gender.svg")
+  print(beta_braycurtis_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_braycurtis_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_2vs3_status2_gender.svg")
+  print(beta_braycurtis_2vs3)
+dev.off()
+
+# Jaccard PCoA
+jaccard_dist = phyloseq::distance(rarefied,
+                                  method="jaccard")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="jaccard")
+
+# 1 vs 2
+beta_jaccard_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs2_status2_gender.svg")
+  print(beta_jaccard_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_jaccard_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs3_status2_gender.svg")
+  print(beta_jaccard_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_jaccard_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Sex",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_2vs3_status2_gender.svg")
+  print(beta_jaccard_2vs3)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+beta_braycurtis_1vs2
+beta_braycurtis_1vs3
+beta_braycurtis_2vs3
+```
+
+```{r, echo = FALSE}
+beta_jaccard_1vs2
+beta_jaccard_1vs3
+beta_jaccard_2vs3
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no-NAFL vs NAFL estratificando por género (Male)
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_male2.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Bray-Curtis PCoA
+braycurtis_dist = phyloseq::distance(rarefied,
+                                     method="bray")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="bray")
+
+# 1 vs 2
+beta_braycurtis_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs2_status2_male.svg")
+  print(beta_braycurtis_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_braycurtis_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs3_status2_male.svg")
+  print(beta_braycurtis_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_braycurtis_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_2vs3_status2_male.svg")
+  print(beta_braycurtis_2vs3)
+dev.off()
+
+# Jaccard PCoA
+jaccard_dist = phyloseq::distance(rarefied,
+                                  method="jaccard")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="jaccard")
+
+# 1 vs 2
+beta_jaccard_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs2_status2_male.svg")
+  print(beta_jaccard_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_jaccard_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs3_status2_male.svg")
+  print(beta_jaccard_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_jaccard_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_2vs3_status2_male.svg")
+  print(beta_jaccard_2vs3)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+beta_braycurtis_1vs2
+beta_braycurtis_1vs3
+beta_braycurtis_2vs3
+```
+
+```{r, echo = FALSE}
+beta_jaccard_1vs2
+beta_jaccard_1vs3
+beta_jaccard_2vs3
+```
+
+\newpage
+
+### Con todas las muestras comparando NASH vs Control no-NAFL vs NAFLestratificando por género (Female)
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+# Input table
+biom_file <- "./00_files/metaphlan3_taxonomic_profile_filt.biom"
+
+map_file <- "./00_files/metadata_female.txt"
+
+biom_otu_tax <- import_biom(biom_file)
+
+metadata <- import_qiime_sample_data(map_file)
+
+physeq <- merge_phyloseq(biom_otu_tax,
+                         metadata)
+
+rarefied = rarefy_even_depth(physeq,
+                             rngseed=1,
+                             sample.size=min(sample_sums(physeq)))
+
+theme_set(theme_bw())
+
+# Bray-Curtis PCoA
+braycurtis_dist = phyloseq::distance(rarefied,
+                                     method="bray")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="bray")
+
+# 1 vs 2
+beta_braycurtis_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs2_status2_female.svg")
+  print(beta_braycurtis_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_braycurtis_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_1vs3_status2_female.svg")
+  print(beta_braycurtis_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_braycurtis_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Bray-Curtis") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_braycurtis_2vs3_status2_female.svg")
+  print(beta_braycurtis_2vs3)
+dev.off()
+
+# Jaccard PCoA
+jaccard_dist = phyloseq::distance(rarefied,
+                                  method="jaccard")
+
+ordination = ordinate(rarefied,
+                      method="PCoA",
+                      distance="jaccard")
+
+# 1 vs 2
+beta_jaccard_1vs2 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1:2,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs2_status2_female.svg")
+  print(beta_jaccard_1vs2)
+dev.off()
+
+# 1 vs 3
+beta_jaccard_1vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 1-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_1vs3_status2_female.svg")
+  print(beta_jaccard_1vs3)
+dev.off()
+
+# 2 vs 3
+beta_jaccard_2vs3 <- plot_ordination(rarefied,
+                ordination,
+                color = "Status_2",
+                axes = 2-3,
+                label = "sample") +
+  labs(title = "Beta diversity, Jaccard") +
+  theme(aspect.ratio=1)
+
+ggsave("./03_bdiv_plots/beta_jaccard_2vs3_status2_female.svg")
+  print(beta_jaccard_2vs3)
+dev.off()
+
+```
+
+```{r, echo = FALSE}
+beta_braycurtis_1vs2
+beta_braycurtis_1vs3
+beta_braycurtis_2vs3
+```
+
+```{r, echo = FALSE}
+beta_jaccard_1vs2
+beta_jaccard_1vs3
+beta_jaccard_2vs3
+```
+
+\newpage
