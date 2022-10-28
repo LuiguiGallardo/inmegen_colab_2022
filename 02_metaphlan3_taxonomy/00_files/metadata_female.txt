@@ -10,6 +10,7 @@ RL573-mf	Female	Control	NAFL
 RL591-mf	Female	NASH	NASH
 RL605-mf	Female	NASH	NASH
 RL607-mf	Female	Control	Control no-NAFL
+RL610-mf	Female	Control	NA
 RL613-mf	Female	NASH	NASH
 RL616-mf	Female	NASH	NASH
 RL627-mf	Female	Control	Control no-NAFL

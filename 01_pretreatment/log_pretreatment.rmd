@@ -1,7 +1,7 @@
 ---
 title: "Colaboración INMEGEN"
-author: "Luigui Gallardo Becerra, Adrián Ochoa Leyva"
-date: "17.01.2022"
+#author: "Luigui Gallardo Becerra, Adrián Ochoa Leyva"
+#date: "17.01.2022"
 output:
   html_document:
     df_print: paged
@@ -31,6 +31,8 @@ library("microbiomeMarker")
 ```
 
 ## Pretratamiento
+
+Para considerar solamente las lecturas de alta calidad antes de realizar la asignación funcional y taxonómica se realizó un pretratamiento a cada una de las muestras. En la siguiente figura se puede observar los pasos que se incluyeron en esta parte del análisis, donde se incluye el filtrado de calidad de las lecturas, la remoción de rRNA y las lecturas pertenecientes al hospedero (humano) que no se necesitan para los análisis siguientes.
 
 ```{r, echo = FALSE}
 mermaid("
@@ -157,7 +159,10 @@ barplot_rawdata_quality_group
 
 \newpage
 
-## Pipeline
+## Pipeline para análisis de metatranscriptoma
+
+En la siguiente figura se encuentra una descripción gráfica de los análisis que se realizaron para conocer la clasificación taxonómica y funcional de los metatranscriptomas de cada una de las muestras para poder hacer las comparaciones entre los grupos. En breve, se utilizó MetaPhlAn para la asignación taxonómica, diversidad alfa, diversidad y beta y LefSe para conocer la especies expresadas diferencialmente entre grupos. Para conocer la funcionalidad de cada muestra, se utilizó HUMAnN3 que nos permitió obtener los genes, rutas metabólicas y la expresión diferencial de las mismas entre los grupos control y NASH
+
 ```{r, echo = FALSE}
 mermaid("
 graph LR

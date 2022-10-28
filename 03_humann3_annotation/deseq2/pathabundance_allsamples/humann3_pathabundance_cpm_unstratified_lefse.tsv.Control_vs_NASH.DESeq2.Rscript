@@ -1,0 +1,28 @@
+library(edgeR)
+library(DESeq2)
+
+data = read.table("/a2/a3/luigui/17_secuencias_inmegen_met/05_humann3/deseq2/humann3_pathabundance_cpm_unstratified_lefse.tsv", header=T, row.names=1, com='')
+col_ordering = c(3,4,8,9,10,15,16,19,20,22,23,31,32,34,35,36,37,38,39,40,1,2,5,6,7,11,12,13,14,17,18,21,24,25,26,27,28,29,30,33)
+rnaseqMatrix = data[,col_ordering]
+rnaseqMatrix = round(rnaseqMatrix)
+rnaseqMatrix = rnaseqMatrix[rowSums(cpm(rnaseqMatrix) > 1) >= 2,]
+conditions = data.frame(conditions=factor(c(rep("Control", 20), rep("NASH", 20))))
+rownames(conditions) = colnames(rnaseqMatrix)
+ddsFullCountTable <- DESeqDataSetFromMatrix(
+    countData = rnaseqMatrix,
+    colData = conditions,
+    design = ~ conditions)
+dds = DESeq(ddsFullCountTable)
+contrast=c("conditions","Control","NASH")
+res = results(dds, contrast)
+baseMeanA <- rowMeans(counts(dds, normalized=TRUE)[,colData(dds)$conditions == "Control"])
+baseMeanB <- rowMeans(counts(dds, normalized=TRUE)[,colData(dds)$conditions == "NASH"])
+res = cbind(baseMeanA, baseMeanB, as.data.frame(res))
+res = cbind(sampleA="Control", sampleB="NASH", as.data.frame(res))
+res$padj[is.na(res$padj)]  <- 1
+write.table(as.data.frame(res[order(res$pvalue),]), file='humann3_pathabundance_cpm_unstratified_lefse.tsv.Control_vs_NASH.DESeq2.DE_results', sep='	', quote=FALSE)
+write.table(rnaseqMatrix, file='humann3_pathabundance_cpm_unstratified_lefse.tsv.Control_vs_NASH.DESeq2.count_matrix', sep='	', quote=FALSE)
+source("/home/luigui/apps/trinityrnaseq-Trinity-v2.5.1/Analysis/DifferentialExpression/R/rnaseq_plot_funcs.R")
+pdf("humann3_pathabundance_cpm_unstratified_lefse.tsv.Control_vs_NASH.DESeq2.DE_results.MA_n_Volcano.pdf")
+plot_MA_and_Volcano(rownames(res), log2(res$baseMean+1), res$log2FoldChange, res$padj)
+dev.off()

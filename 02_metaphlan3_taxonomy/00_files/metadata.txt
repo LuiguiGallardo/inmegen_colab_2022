@@ -16,7 +16,7 @@ RL601-mf	Male	NASH	NASH
 RL605-mf	Female	NASH	NASH
 RL606-mf	Male	NASH	NASH
 RL607-mf	Female	Control	Control no-NAFL
-RL610-mf	NA	Control	NA
+RL610-mf	Female	Control	NA
 RL613-mf	Female	NASH	NASH
 RL616-mf	Female	NASH	NASH
 RL619-mf	NA	NASH	NA
