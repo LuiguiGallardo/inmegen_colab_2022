@@ -1,0 +1,17 @@
+sample	Sex	Status_1	Status_2	Response
+RL518-mf	Male	NASH	NASH	Negative
+RL569-mf	Female	Control	Control no-NAFL	Positive
+RL573-mf	Female	Control	NAFL	Positive
+RL591-mf	Female	NASH	NASH	Negative
+RL599-mf	NA	Control	NA	Negative
+RL606-mf	Male	NASH	NASH	Positive
+RL607-mf	Female	Control	Control no-NAFL	Negative
+RL621-mf	NA	NASH	NA	Positive
+RL625-mf	NA	Control	NA	Negative
+RL638-mf	NA	Control	NA	Positive
+RL656-mf	Female	NASH	NASH	Positive
+RL679-mf	Female	NASH	NASH	Positive
+RL683-mf	Female	NASH	NASH	Positive
+RL691-mf	Female	Control	NAFL	Negative
+RL693-mf	Female	Control	NAFL	Positive
+RL700-mf	Male	Control	NA	Negative
