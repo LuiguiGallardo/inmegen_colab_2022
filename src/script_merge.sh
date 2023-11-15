@@ -1,0 +1,104 @@
+#!/bin/bash
+# Title: script_fastqc.sh
+# Purpose: Fastqc of the raw data and merge files
+# Author: Luigui Gallardo-Becerra (bfllg77@gmail.com)
+# Date: 25.09.2021
+
+# Beginning of the script
+for s in 01_merged/*gz ; do fastqc $s -o 02_merged_fastqc -t 64 ; done
+
+# Cat lines 
+cat 00_separated/RL509-mf_S1_L001_R1_001.fastq.gz 00_separated/RL509-mf_S1_L002_R1_001.fastq.gz 00_separated/RL509-mf_S1_L003_R1_001.fastq.gz 00_separated/RL509-mf_S1_L004_R1_001.fastq.gz > 01_merged/RL509-mf_R1.fastq.gz &
+cat 00_separated/RL509-mf_S1_L001_R2_001.fastq.gz 00_separated/RL509-mf_S1_L002_R2_001.fastq.gz 00_separated/RL509-mf_S1_L003_R2_001.fastq.gz 00_separated/RL509-mf_S1_L004_R2_001.fastq.gz > 01_merged/RL509-mf_R2.fastq.gz &
+cat 00_separated/RL511-mf_S2_L001_R1_001.fastq.gz 00_separated/RL511-mf_S2_L002_R1_001.fastq.gz 00_separated/RL511-mf_S2_L003_R1_001.fastq.gz 00_separated/RL511-mf_S2_L004_R1_001.fastq.gz > 01_merged/RL511-mf_R1.fastq.gz &
+cat 00_separated/RL511-mf_S2_L001_R2_001.fastq.gz 00_separated/RL511-mf_S2_L002_R2_001.fastq.gz 00_separated/RL511-mf_S2_L003_R2_001.fastq.gz 00_separated/RL511-mf_S2_L004_R2_001.fastq.gz > 01_merged/RL511-mf_R2.fastq.gz &
+cat 00_separated/RL514-mf_S3_L001_R1_001.fastq.gz 00_separated/RL514-mf_S3_L002_R1_001.fastq.gz 00_separated/RL514-mf_S3_L003_R1_001.fastq.gz 00_separated/RL514-mf_S3_L004_R1_001.fastq.gz > 01_merged/RL514-mf_R1.fastq.gz &
+cat 00_separated/RL514-mf_S3_L001_R2_001.fastq.gz 00_separated/RL514-mf_S3_L002_R2_001.fastq.gz 00_separated/RL514-mf_S3_L003_R2_001.fastq.gz 00_separated/RL514-mf_S3_L004_R2_001.fastq.gz > 01_merged/RL514-mf_R2.fastq.gz &
+cat 00_separated/RL516-mf_S4_L001_R1_001.fastq.gz 00_separated/RL516-mf_S4_L002_R1_001.fastq.gz 00_separated/RL516-mf_S4_L003_R1_001.fastq.gz 00_separated/RL516-mf_S4_L004_R1_001.fastq.gz > 01_merged/RL516-mf_R1.fastq.gz &
+cat 00_separated/RL516-mf_S4_L001_R2_001.fastq.gz 00_separated/RL516-mf_S4_L002_R2_001.fastq.gz 00_separated/RL516-mf_S4_L003_R2_001.fastq.gz 00_separated/RL516-mf_S4_L004_R2_001.fastq.gz > 01_merged/RL516-mf_R2.fastq.gz &
+cat 00_separated/RL518-mf_S9_L001_R1_001.fastq.gz 00_separated/RL518-mf_S9_L002_R1_001.fastq.gz 00_separated/RL518-mf_S9_L003_R1_001.fastq.gz 00_separated/RL518-mf_S9_L004_R1_001.fastq.gz > 01_merged/RL518-mf_R1.fastq.gz &
+cat 00_separated/RL518-mf_S9_L001_R2_001.fastq.gz 00_separated/RL518-mf_S9_L002_R2_001.fastq.gz 00_separated/RL518-mf_S9_L003_R2_001.fastq.gz 00_separated/RL518-mf_S9_L004_R2_001.fastq.gz > 01_merged/RL518-mf_R2.fastq.gz &
+cat 00_separated/RL528-mf_S5_L001_R1_001.fastq.gz 00_separated/RL528-mf_S5_L002_R1_001.fastq.gz 00_separated/RL528-mf_S5_L003_R1_001.fastq.gz 00_separated/RL528-mf_S5_L004_R1_001.fastq.gz > 01_merged/RL528-mf_R1.fastq.gz &
+cat 00_separated/RL528-mf_S5_L001_R2_001.fastq.gz 00_separated/RL528-mf_S5_L002_R2_001.fastq.gz 00_separated/RL528-mf_S5_L003_R2_001.fastq.gz 00_separated/RL528-mf_S5_L004_R2_001.fastq.gz > 01_merged/RL528-mf_R2.fastq.gz &
+cat 00_separated/RL568-mf_S6_L001_R1_001.fastq.gz 00_separated/RL568-mf_S6_L002_R1_001.fastq.gz 00_separated/RL568-mf_S6_L003_R1_001.fastq.gz 00_separated/RL568-mf_S6_L004_R1_001.fastq.gz > 01_merged/RL568-mf_R1.fastq.gz &
+cat 00_separated/RL568-mf_S6_L001_R2_001.fastq.gz 00_separated/RL568-mf_S6_L002_R2_001.fastq.gz 00_separated/RL568-mf_S6_L003_R2_001.fastq.gz 00_separated/RL568-mf_S6_L004_R2_001.fastq.gz > 01_merged/RL568-mf_R2.fastq.gz &
+cat 00_separated/RL569-mf_S10_L001_R1_001.fastq.gz 00_separated/RL569-mf_S10_L002_R1_001.fastq.gz 00_separated/RL569-mf_S10_L003_R1_001.fastq.gz 00_separated/RL569-mf_S10_L004_R1_001.fastq.gz > 01_merged/RL569-mf_R1.fastq.gz &
+cat 00_separated/RL569-mf_S10_L001_R2_001.fastq.gz 00_separated/RL569-mf_S10_L002_R2_001.fastq.gz 00_separated/RL569-mf_S10_L003_R2_001.fastq.gz 00_separated/RL569-mf_S10_L004_R2_001.fastq.gz > 01_merged/RL569-mf_R2.fastq.gz &
+cat 00_separated/RL573-mf_S7_L001_R1_001.fastq.gz 00_separated/RL573-mf_S7_L002_R1_001.fastq.gz 00_separated/RL573-mf_S7_L003_R1_001.fastq.gz 00_separated/RL573-mf_S7_L004_R1_001.fastq.gz > 01_merged/RL573-mf_R1.fastq.gz &
+cat 00_separated/RL573-mf_S7_L001_R2_001.fastq.gz 00_separated/RL573-mf_S7_L002_R2_001.fastq.gz 00_separated/RL573-mf_S7_L003_R2_001.fastq.gz 00_separated/RL573-mf_S7_L004_R2_001.fastq.gz > 01_merged/RL573-mf_R2.fastq.gz &
+cat 00_separated/RL585-mf_S8_L001_R1_001.fastq.gz 00_separated/RL585-mf_S8_L002_R1_001.fastq.gz 00_separated/RL585-mf_S8_L003_R1_001.fastq.gz 00_separated/RL585-mf_S8_L004_R1_001.fastq.gz > 01_merged/RL585-mf_R1.fastq.gz &
+cat 00_separated/RL585-mf_S8_L001_R2_001.fastq.gz 00_separated/RL585-mf_S8_L002_R2_001.fastq.gz 00_separated/RL585-mf_S8_L003_R2_001.fastq.gz 00_separated/RL585-mf_S8_L004_R2_001.fastq.gz > 01_merged/RL585-mf_R2.fastq.gz &
+cat 00_separated/RL591-mf_S9_L001_R1_001.fastq.gz 00_separated/RL591-mf_S9_L002_R1_001.fastq.gz 00_separated/RL591-mf_S9_L003_R1_001.fastq.gz 00_separated/RL591-mf_S9_L004_R1_001.fastq.gz > 01_merged/RL591-mf_R1.fastq.gz &
+cat 00_separated/RL591-mf_S9_L001_R2_001.fastq.gz 00_separated/RL591-mf_S9_L002_R2_001.fastq.gz 00_separated/RL591-mf_S9_L003_R2_001.fastq.gz 00_separated/RL591-mf_S9_L004_R2_001.fastq.gz > 01_merged/RL591-mf_R2.fastq.gz &
+cat 00_separated/RL601-mf_S10_L001_R1_001.fastq.gz 00_separated/RL601-mf_S10_L002_R1_001.fastq.gz 00_separated/RL601-mf_S10_L003_R1_001.fastq.gz 00_separated/RL601-mf_S10_L004_R1_001.fastq.gz > 01_merged/RL601-mf_R1.fastq.gz &
+cat 00_separated/RL601-mf_S10_L001_R2_001.fastq.gz 00_separated/RL601-mf_S10_L002_R2_001.fastq.gz 00_separated/RL601-mf_S10_L003_R2_001.fastq.gz 00_separated/RL601-mf_S10_L004_R2_001.fastq.gz > 01_merged/RL601-mf_R2.fastq.gz &
+cat 00_separated/RL605-mf_S11_L001_R1_001.fastq.gz 00_separated/RL605-mf_S11_L002_R1_001.fastq.gz 00_separated/RL605-mf_S11_L003_R1_001.fastq.gz 00_separated/RL605-mf_S11_L004_R1_001.fastq.gz > 01_merged/RL605-mf_R1.fastq.gz &
+cat 00_separated/RL605-mf_S11_L001_R2_001.fastq.gz 00_separated/RL605-mf_S11_L002_R2_001.fastq.gz 00_separated/RL605-mf_S11_L003_R2_001.fastq.gz 00_separated/RL605-mf_S11_L004_R2_001.fastq.gz > 01_merged/RL605-mf_R2.fastq.gz &
+cat 00_separated/RL606-mf_S12_L001_R1_001.fastq.gz 00_separated/RL606-mf_S12_L002_R1_001.fastq.gz 00_separated/RL606-mf_S12_L003_R1_001.fastq.gz 00_separated/RL606-mf_S12_L004_R1_001.fastq.gz > 01_merged/RL606-mf_R1.fastq.gz &
+cat 00_separated/RL606-mf_S12_L001_R2_001.fastq.gz 00_separated/RL606-mf_S12_L002_R2_001.fastq.gz 00_separated/RL606-mf_S12_L003_R2_001.fastq.gz 00_separated/RL606-mf_S12_L004_R2_001.fastq.gz > 01_merged/RL606-mf_R2.fastq.gz &
+cat 00_separated/RL607-mf_S11_L001_R1_001.fastq.gz 00_separated/RL607-mf_S11_L002_R1_001.fastq.gz 00_separated/RL607-mf_S11_L003_R1_001.fastq.gz 00_separated/RL607-mf_S11_L004_R1_001.fastq.gz > 01_merged/RL607-mf_R1.fastq.gz &
+cat 00_separated/RL607-mf_S11_L001_R2_001.fastq.gz 00_separated/RL607-mf_S11_L002_R2_001.fastq.gz 00_separated/RL607-mf_S11_L003_R2_001.fastq.gz 00_separated/RL607-mf_S11_L004_R2_001.fastq.gz > 01_merged/RL607-mf_R2.fastq.gz &
+cat 00_separated/RL610-mf_S12_L001_R1_001.fastq.gz 00_separated/RL610-mf_S12_L002_R1_001.fastq.gz 00_separated/RL610-mf_S12_L003_R1_001.fastq.gz 00_separated/RL610-mf_S12_L004_R1_001.fastq.gz > 01_merged/RL610-mf_R1.fastq.gz &
+cat 00_separated/RL610-mf_S12_L001_R2_001.fastq.gz 00_separated/RL610-mf_S12_L002_R2_001.fastq.gz 00_separated/RL610-mf_S12_L003_R2_001.fastq.gz 00_separated/RL610-mf_S12_L004_R2_001.fastq.gz > 01_merged/RL610-mf_R2.fastq.gz &
+cat 00_separated/RL613-mf_S1_L001_R1_001.fastq.gz 00_separated/RL613-mf_S1_L002_R1_001.fastq.gz 00_separated/RL613-mf_S1_L003_R1_001.fastq.gz 00_separated/RL613-mf_S1_L004_R1_001.fastq.gz > 01_merged/RL613-mf_R1.fastq.gz &
+cat 00_separated/RL613-mf_S1_L001_R2_001.fastq.gz 00_separated/RL613-mf_S1_L002_R2_001.fastq.gz 00_separated/RL613-mf_S1_L003_R2_001.fastq.gz 00_separated/RL613-mf_S1_L004_R2_001.fastq.gz > 01_merged/RL613-mf_R2.fastq.gz &
+cat 00_separated/RL616-mf_S2_L001_R1_001.fastq.gz 00_separated/RL616-mf_S2_L002_R1_001.fastq.gz 00_separated/RL616-mf_S2_L003_R1_001.fastq.gz 00_separated/RL616-mf_S2_L004_R1_001.fastq.gz > 01_merged/RL616-mf_R1.fastq.gz &
+cat 00_separated/RL616-mf_S2_L001_R2_001.fastq.gz 00_separated/RL616-mf_S2_L002_R2_001.fastq.gz 00_separated/RL616-mf_S2_L003_R2_001.fastq.gz 00_separated/RL616-mf_S2_L004_R2_001.fastq.gz > 01_merged/RL616-mf_R2.fastq.gz &
+cat 00_separated/RL619-mf_S1_L001_R1_001.fastq.gz 00_separated/RL619-mf_S1_L002_R1_001.fastq.gz 00_separated/RL619-mf_S1_L003_R1_001.fastq.gz 00_separated/RL619-mf_S1_L004_R1_001.fastq.gz > 01_merged/RL619-mf_R1.fastq.gz &
+cat 00_separated/RL619-mf_S1_L001_R2_001.fastq.gz 00_separated/RL619-mf_S1_L002_R2_001.fastq.gz 00_separated/RL619-mf_S1_L003_R2_001.fastq.gz 00_separated/RL619-mf_S1_L004_R2_001.fastq.gz > 01_merged/RL619-mf_R2.fastq.gz &
+cat 00_separated/RL621-mf_S2_L001_R1_001.fastq.gz 00_separated/RL621-mf_S2_L002_R1_001.fastq.gz 00_separated/RL621-mf_S2_L003_R1_001.fastq.gz 00_separated/RL621-mf_S2_L004_R1_001.fastq.gz > 01_merged/RL621-mf_R1.fastq.gz &
+cat 00_separated/RL621-mf_S2_L001_R2_001.fastq.gz 00_separated/RL621-mf_S2_L002_R2_001.fastq.gz 00_separated/RL621-mf_S2_L003_R2_001.fastq.gz 00_separated/RL621-mf_S2_L004_R2_001.fastq.gz > 01_merged/RL621-mf_R2.fastq.gz &
+cat 00_separated/RL625-mf_S3_L001_R1_001.fastq.gz 00_separated/RL625-mf_S3_L002_R1_001.fastq.gz 00_separated/RL625-mf_S3_L003_R1_001.fastq.gz 00_separated/RL625-mf_S3_L004_R1_001.fastq.gz > 01_merged/RL625-mf_R1.fastq.gz &
+cat 00_separated/RL625-mf_S3_L001_R2_001.fastq.gz 00_separated/RL625-mf_S3_L002_R2_001.fastq.gz 00_separated/RL625-mf_S3_L003_R2_001.fastq.gz 00_separated/RL625-mf_S3_L004_R2_001.fastq.gz > 01_merged/RL625-mf_R2.fastq.gz &
+cat 00_separated/RL627-mf_S3_L001_R1_001.fastq.gz 00_separated/RL627-mf_S3_L002_R1_001.fastq.gz 00_separated/RL627-mf_S3_L003_R1_001.fastq.gz 00_separated/RL627-mf_S3_L004_R1_001.fastq.gz > 01_merged/RL627-mf_R1.fastq.gz &
+cat 00_separated/RL627-mf_S3_L001_R2_001.fastq.gz 00_separated/RL627-mf_S3_L002_R2_001.fastq.gz 00_separated/RL627-mf_S3_L003_R2_001.fastq.gz 00_separated/RL627-mf_S3_L004_R2_001.fastq.gz > 01_merged/RL627-mf_R2.fastq.gz &
+cat 00_separated/RL628-mf_S4_L001_R1_001.fastq.gz 00_separated/RL628-mf_S4_L002_R1_001.fastq.gz 00_separated/RL628-mf_S4_L003_R1_001.fastq.gz 00_separated/RL628-mf_S4_L004_R1_001.fastq.gz > 01_merged/RL628-mf_R1.fastq.gz &
+cat 00_separated/RL628-mf_S4_L001_R2_001.fastq.gz 00_separated/RL628-mf_S4_L002_R2_001.fastq.gz 00_separated/RL628-mf_S4_L003_R2_001.fastq.gz 00_separated/RL628-mf_S4_L004_R2_001.fastq.gz > 01_merged/RL628-mf_R2.fastq.gz &
+cat 00_separated/RL641-mf_S10_L001_R1_001.fastq.gz 00_separated/RL641-mf_S10_L002_R1_001.fastq.gz 00_separated/RL641-mf_S10_L003_R1_001.fastq.gz 00_separated/RL641-mf_S10_L004_R1_001.fastq.gz > 01_merged/RL641-mf_R1.fastq.gz &
+cat 00_separated/RL641-mf_S10_L001_R2_001.fastq.gz 00_separated/RL641-mf_S10_L002_R2_001.fastq.gz 00_separated/RL641-mf_S10_L003_R2_001.fastq.gz 00_separated/RL641-mf_S10_L004_R2_001.fastq.gz > 01_merged/RL641-mf_R2.fastq.gz &
+cat 00_separated/RL651-mf_S4_L001_R1_001.fastq.gz 00_separated/RL651-mf_S4_L002_R1_001.fastq.gz 00_separated/RL651-mf_S4_L003_R1_001.fastq.gz 00_separated/RL651-mf_S4_L004_R1_001.fastq.gz > 01_merged/RL651-mf_R1.fastq.gz &
+cat 00_separated/RL651-mf_S4_L001_R2_001.fastq.gz 00_separated/RL651-mf_S4_L002_R2_001.fastq.gz 00_separated/RL651-mf_S4_L003_R2_001.fastq.gz 00_separated/RL651-mf_S4_L004_R2_001.fastq.gz > 01_merged/RL651-mf_R2.fastq.gz &
+cat 00_separated/RL654-mf_S5_L001_R1_001.fastq.gz 00_separated/RL654-mf_S5_L002_R1_001.fastq.gz 00_separated/RL654-mf_S5_L003_R1_001.fastq.gz 00_separated/RL654-mf_S5_L004_R1_001.fastq.gz > 01_merged/RL654-mf_R1.fastq.gz &
+cat 00_separated/RL654-mf_S5_L001_R2_001.fastq.gz 00_separated/RL654-mf_S5_L002_R2_001.fastq.gz 00_separated/RL654-mf_S5_L003_R2_001.fastq.gz 00_separated/RL654-mf_S5_L004_R2_001.fastq.gz > 01_merged/RL654-mf_R2.fastq.gz &
+cat 00_separated/RL656-12_S2_L001_R1_001.fastq.gz 00_separated/RL656-12_S2_L002_R1_001.fastq.gz 00_separated/RL656-12_S2_L003_R1_001.fastq.gz 00_separated/RL656-12_S2_L004_R1_001.fastq.gz > 01_merged/RL656-12_R1.fastq.gz &
+cat 00_separated/RL656-12_S2_L001_R2_001.fastq.gz 00_separated/RL656-12_S2_L002_R2_001.fastq.gz 00_separated/RL656-12_S2_L003_R2_001.fastq.gz 00_separated/RL656-12_S2_L004_R2_001.fastq.gz > 01_merged/RL656-12_R2.fastq.gz &
+cat 00_separated/RL656-3_S11_L001_R1_001.fastq.gz 00_separated/RL656-3_S11_L002_R1_001.fastq.gz 00_separated/RL656-3_S11_L003_R1_001.fastq.gz 00_separated/RL656-3_S11_L004_R1_001.fastq.gz > 01_merged/RL656-3_R1.fastq.gz &
+cat 00_separated/RL656-3_S11_L001_R2_001.fastq.gz 00_separated/RL656-3_S11_L002_R2_001.fastq.gz 00_separated/RL656-3_S11_L003_R2_001.fastq.gz 00_separated/RL656-3_S11_L004_R2_001.fastq.gz > 01_merged/RL656-3_R2.fastq.gz &
+cat 00_separated/RL656-6_S1_L001_R1_001.fastq.gz 00_separated/RL656-6_S1_L002_R1_001.fastq.gz 00_separated/RL656-6_S1_L003_R1_001.fastq.gz 00_separated/RL656-6_S1_L004_R1_001.fastq.gz > 01_merged/RL656-6_R1.fastq.gz &
+cat 00_separated/RL656-6_S1_L001_R2_001.fastq.gz 00_separated/RL656-6_S1_L002_R2_001.fastq.gz 00_separated/RL656-6_S1_L003_R2_001.fastq.gz 00_separated/RL656-6_S1_L004_R2_001.fastq.gz > 01_merged/RL656-6_R2.fastq.gz &
+cat 00_separated/RL656-mf_S5_L001_R1_001.fastq.gz 00_separated/RL656-mf_S5_L002_R1_001.fastq.gz 00_separated/RL656-mf_S5_L003_R1_001.fastq.gz 00_separated/RL656-mf_S5_L004_R1_001.fastq.gz > 01_merged/RL656-mf_R1.fastq.gz &
+cat 00_separated/RL656-mf_S5_L001_R2_001.fastq.gz 00_separated/RL656-mf_S5_L002_R2_001.fastq.gz 00_separated/RL656-mf_S5_L003_R2_001.fastq.gz 00_separated/RL656-mf_S5_L004_R2_001.fastq.gz > 01_merged/RL656-mf_R2.fastq.gz &
+cat 00_separated/RL659-mf_S3_L001_R1_001.fastq.gz 00_separated/RL659-mf_S3_L002_R1_001.fastq.gz 00_separated/RL659-mf_S3_L003_R1_001.fastq.gz 00_separated/RL659-mf_S3_L004_R1_001.fastq.gz > 01_merged/RL659-mf_R1.fastq.gz &
+cat 00_separated/RL659-mf_S3_L001_R2_001.fastq.gz 00_separated/RL659-mf_S3_L002_R2_001.fastq.gz 00_separated/RL659-mf_S3_L003_R2_001.fastq.gz 00_separated/RL659-mf_S3_L004_R2_001.fastq.gz > 01_merged/RL659-mf_R2.fastq.gz &
+cat 00_separated/RL663-mf_S6_L001_R1_001.fastq.gz 00_separated/RL663-mf_S6_L002_R1_001.fastq.gz 00_separated/RL663-mf_S6_L003_R1_001.fastq.gz 00_separated/RL663-mf_S6_L004_R1_001.fastq.gz > 01_merged/RL663-mf_R1.fastq.gz &
+cat 00_separated/RL663-mf_S6_L001_R2_001.fastq.gz 00_separated/RL663-mf_S6_L002_R2_001.fastq.gz 00_separated/RL663-mf_S6_L003_R2_001.fastq.gz 00_separated/RL663-mf_S6_L004_R2_001.fastq.gz > 01_merged/RL663-mf_R2.fastq.gz &
+cat 00_separated/RL665-mf_S7_L001_R1_001.fastq.gz 00_separated/RL665-mf_S7_L002_R1_001.fastq.gz 00_separated/RL665-mf_S7_L003_R1_001.fastq.gz 00_separated/RL665-mf_S7_L004_R1_001.fastq.gz > 01_merged/RL665-mf_R1.fastq.gz &
+cat 00_separated/RL665-mf_S7_L001_R2_001.fastq.gz 00_separated/RL665-mf_S7_L002_R2_001.fastq.gz 00_separated/RL665-mf_S7_L003_R2_001.fastq.gz 00_separated/RL665-mf_S7_L004_R2_001.fastq.gz > 01_merged/RL665-mf_R2.fastq.gz &
+cat 00_separated/RL667-mf_S8_L001_R1_001.fastq.gz 00_separated/RL667-mf_S8_L002_R1_001.fastq.gz 00_separated/RL667-mf_S8_L003_R1_001.fastq.gz 00_separated/RL667-mf_S8_L004_R1_001.fastq.gz > 01_merged/RL667-mf_R1.fastq.gz &
+cat 00_separated/RL667-mf_S8_L001_R2_001.fastq.gz 00_separated/RL667-mf_S8_L002_R2_001.fastq.gz 00_separated/RL667-mf_S8_L003_R2_001.fastq.gz 00_separated/RL667-mf_S8_L004_R2_001.fastq.gz > 01_merged/RL667-mf_R2.fastq.gz &
+cat 00_separated/RL668-mf_S6_L001_R1_001.fastq.gz 00_separated/RL668-mf_S6_L002_R1_001.fastq.gz 00_separated/RL668-mf_S6_L003_R1_001.fastq.gz 00_separated/RL668-mf_S6_L004_R1_001.fastq.gz > 01_merged/RL668-mf_R1.fastq.gz &
+cat 00_separated/RL668-mf_S6_L001_R2_001.fastq.gz 00_separated/RL668-mf_S6_L002_R2_001.fastq.gz 00_separated/RL668-mf_S6_L003_R2_001.fastq.gz 00_separated/RL668-mf_S6_L004_R2_001.fastq.gz > 01_merged/RL668-mf_R2.fastq.gz &
+cat 00_separated/RL679-mf_S7_L001_R1_001.fastq.gz 00_separated/RL679-mf_S7_L002_R1_001.fastq.gz 00_separated/RL679-mf_S7_L003_R1_001.fastq.gz 00_separated/RL679-mf_S7_L004_R1_001.fastq.gz > 01_merged/RL679-mf_R1.fastq.gz &
+cat 00_separated/RL679-mf_S7_L001_R2_001.fastq.gz 00_separated/RL679-mf_S7_L002_R2_001.fastq.gz 00_separated/RL679-mf_S7_L003_R2_001.fastq.gz 00_separated/RL679-mf_S7_L004_R2_001.fastq.gz > 01_merged/RL679-mf_R2.fastq.gz &
+cat 00_separated/RL680-mf_S8_L001_R1_001.fastq.gz 00_separated/RL680-mf_S8_L002_R1_001.fastq.gz 00_separated/RL680-mf_S8_L003_R1_001.fastq.gz 00_separated/RL680-mf_S8_L004_R1_001.fastq.gz > 01_merged/RL680-mf_R1.fastq.gz &
+cat 00_separated/RL680-mf_S8_L001_R2_001.fastq.gz 00_separated/RL680-mf_S8_L002_R2_001.fastq.gz 00_separated/RL680-mf_S8_L003_R2_001.fastq.gz 00_separated/RL680-mf_S8_L004_R2_001.fastq.gz > 01_merged/RL680-mf_R2.fastq.gz &
+cat 00_separated/RL682-mf_S9_L001_R1_001.fastq.gz 00_separated/RL682-mf_S9_L002_R1_001.fastq.gz 00_separated/RL682-mf_S9_L003_R1_001.fastq.gz 00_separated/RL682-mf_S9_L004_R1_001.fastq.gz > 01_merged/RL682-mf_R1.fastq.gz &
+cat 00_separated/RL682-mf_S9_L001_R2_001.fastq.gz 00_separated/RL682-mf_S9_L002_R2_001.fastq.gz 00_separated/RL682-mf_S9_L003_R2_001.fastq.gz 00_separated/RL682-mf_S9_L004_R2_001.fastq.gz > 01_merged/RL682-mf_R2.fastq.gz &
+cat 00_separated/RL683-mf_S4_L001_R1_001.fastq.gz 00_separated/RL683-mf_S4_L002_R1_001.fastq.gz 00_separated/RL683-mf_S4_L003_R1_001.fastq.gz 00_separated/RL683-mf_S4_L004_R1_001.fastq.gz > 01_merged/RL683-mf_R1.fastq.gz &
+cat 00_separated/RL683-mf_S4_L001_R2_001.fastq.gz 00_separated/RL683-mf_S4_L002_R2_001.fastq.gz 00_separated/RL683-mf_S4_L003_R2_001.fastq.gz 00_separated/RL683-mf_S4_L004_R2_001.fastq.gz > 01_merged/RL683-mf_R2.fastq.gz &
+cat 00_separated/RL686-mf_S5_L001_R1_001.fastq.gz 00_separated/RL686-mf_S5_L002_R1_001.fastq.gz 00_separated/RL686-mf_S5_L003_R1_001.fastq.gz 00_separated/RL686-mf_S5_L004_R1_001.fastq.gz > 01_merged/RL686-mf_R1.fastq.gz &
+cat 00_separated/RL686-mf_S5_L001_R2_001.fastq.gz 00_separated/RL686-mf_S5_L002_R2_001.fastq.gz 00_separated/RL686-mf_S5_L003_R2_001.fastq.gz 00_separated/RL686-mf_S5_L004_R2_001.fastq.gz > 01_merged/RL686-mf_R2.fastq.gz &
+cat 00_separated/RL691-mf_S6_L001_R1_001.fastq.gz 00_separated/RL691-mf_S6_L002_R1_001.fastq.gz 00_separated/RL691-mf_S6_L003_R1_001.fastq.gz 00_separated/RL691-mf_S6_L004_R1_001.fastq.gz > 01_merged/RL691-mf_R1.fastq.gz &
+cat 00_separated/RL691-mf_S6_L001_R2_001.fastq.gz 00_separated/RL691-mf_S6_L002_R2_001.fastq.gz 00_separated/RL691-mf_S6_L003_R2_001.fastq.gz 00_separated/RL691-mf_S6_L004_R2_001.fastq.gz > 01_merged/RL691-mf_R2.fastq.gz &
+cat 00_separated/RL693-mf_S7_L001_R1_001.fastq.gz 00_separated/RL693-mf_S7_L002_R1_001.fastq.gz 00_separated/RL693-mf_S7_L003_R1_001.fastq.gz 00_separated/RL693-mf_S7_L004_R1_001.fastq.gz > 01_merged/RL693-mf_R1.fastq.gz &
+cat 00_separated/RL693-mf_S7_L001_R2_001.fastq.gz 00_separated/RL693-mf_S7_L002_R2_001.fastq.gz 00_separated/RL693-mf_S7_L003_R2_001.fastq.gz 00_separated/RL693-mf_S7_L004_R2_001.fastq.gz > 01_merged/RL693-mf_R2.fastq.gz &
+cat 00_separated/RL700-mf_S8_L001_R1_001.fastq.gz 00_separated/RL700-mf_S8_L002_R1_001.fastq.gz 00_separated/RL700-mf_S8_L003_R1_001.fastq.gz 00_separated/RL700-mf_S8_L004_R1_001.fastq.gz > 01_merged/RL700-mf_R1.fastq.gz &
+cat 00_separated/RL700-mf_S8_L001_R2_001.fastq.gz 00_separated/RL700-mf_S8_L002_R2_001.fastq.gz 00_separated/RL700-mf_S8_L003_R2_001.fastq.gz 00_separated/RL700-mf_S8_L004_R2_001.fastq.gz > 01_merged/RL700-mf_R2.fastq.gz &
+cat 00_separated/RL703-mf_S9_L001_R1_001.fastq.gz 00_separated/RL703-mf_S9_L002_R1_001.fastq.gz 00_separated/RL703-mf_S9_L003_R1_001.fastq.gz 00_separated/RL703-mf_S9_L004_R1_001.fastq.gz > 01_merged/RL703-mf_R1.fastq.gz &
+cat 00_separated/RL703-mf_S9_L001_R2_001.fastq.gz 00_separated/RL703-mf_S9_L002_R2_001.fastq.gz 00_separated/RL703-mf_S9_L003_R2_001.fastq.gz 00_separated/RL703-mf_S9_L004_R2_001.fastq.gz > 01_merged/RL703-mf_R2.fastq.gz &
+cat 00_separated/RL704-mf_S10_L001_R1_001.fastq.gz 00_separated/RL704-mf_S10_L002_R1_001.fastq.gz 00_separated/RL704-mf_S10_L003_R1_001.fastq.gz 00_separated/RL704-mf_S10_L004_R1_001.fastq.gz > 01_merged/RL704-mf_R1.fastq.gz &
+cat 00_separated/RL704-mf_S10_L001_R2_001.fastq.gz 00_separated/RL704-mf_S10_L002_R2_001.fastq.gz 00_separated/RL704-mf_S10_L003_R2_001.fastq.gz 00_separated/RL704-mf_S10_L004_R2_001.fastq.gz > 01_merged/RL704-mf_R2.fastq.gz &
+cat 00_separated/RL725-mf_S11_L001_R1_001.fastq.gz 00_separated/RL725-mf_S11_L002_R1_001.fastq.gz 00_separated/RL725-mf_S11_L003_R1_001.fastq.gz 00_separated/RL725-mf_S11_L004_R1_001.fastq.gz > 01_merged/RL725-mf_R1.fastq.gz &
+cat 00_separated/RL725-mf_S11_L001_R2_001.fastq.gz 00_separated/RL725-mf_S11_L002_R2_001.fastq.gz 00_separated/RL725-mf_S11_L003_R2_001.fastq.gz 00_separated/RL725-mf_S11_L004_R2_001.fastq.gz > 01_merged/RL725-mf_R2.fastq.gz &
+
+# The end!
