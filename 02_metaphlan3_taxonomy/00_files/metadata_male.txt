@@ -9,3 +9,4 @@ RL663-mf	Male	NASH	NASH
 RL682-mf	Male	Control	NA
 RL686-mf	Male	Control	Control no-NAFL
 RL700-mf	Male	Control	NA
+RL619-mf	Male	NASH	NA

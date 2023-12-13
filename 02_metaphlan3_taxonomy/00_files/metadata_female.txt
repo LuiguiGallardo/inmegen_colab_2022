@@ -29,3 +29,5 @@ RL693-mf	Female	Control	NAFL
 RL703-mf	Female	Control	Control no-NAFL
 RL704-mf	Female	Control	NAFL
 RL725-mf	Female	Control	NAFL
+RL621-mf	Female	NASH	NA
+RL625-mf	Female	Control	NA
